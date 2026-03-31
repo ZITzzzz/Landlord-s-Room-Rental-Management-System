@@ -1,51 +1,51 @@
-# Architecture — Hệ thống quản lí cho thuê phòng trọ
+# Architecture — Room Rental Management System
 
 ---
 
-## 1. Tổng quan
+## 1. Overview
 
 ```
-Trình duyệt (LAN)
+Browser (LAN)
   └── React SPA (Vite · Ant Design · TanStack Query · React Hook Form · Zod · Day.js · Recharts)
         │ HTTP REST /api
         ▼
   Node.js / Express
   Morgan → Router → validate(Zod) → Controller → Service → Mongoose
-  Puppeteer (PDF) · ExcelJS · Winston (log)
+  Puppeteer (PDF) · ExcelJS · Winston (logging)
         │ Mongoose ODM
         ▼
   MongoDB  —  13 collections · ObjectId refs · indexes
 ```
 
-**Đặc điểm:** 3 tầng · single-user · LAN · không cần internet · Zod schema dùng chung client + server
+**Key traits:** 3-layer architecture · single-user · LAN · no internet required · Zod schemas shared between client and server
 
 ---
 
-## 2. Cấu trúc thư mục
+## 2. Directory Structure
 
 ```
 ├── client/src/
-│   ├── api/          Axios functions (1 file/domain)
+│   ├── api/          Axios functions (1 file per domain)
 │   ├── hooks/        TanStack Query wrappers
 │   ├── pages/        1 folder/domain → 1 file/route
-│   ├── components/   UI tái sử dụng (StatusBadge, ConfirmDeleteModal, ...)
+│   ├── components/   Reusable UI (StatusBadge, ConfirmDeleteModal, ...)
 │   └── utils/        ngayThang.js (Day.js), format.js
 │
 ├── server/src/
 │   ├── models/       Mongoose schemas (13 files)
 │   ├── routes/       Express routers
-│   ├── controllers/  Nhận req → gọi service → trả res
-│   ├── services/     Business logic thuần
+│   ├── controllers/  Receive req → call service → send res
+│   ├── services/     Pure business logic (no HTTP awareness)
 │   ├── middlewares/  validate.js · errorHandler.js
-│   ├── templates/    HTML cho Puppeteer (hopDong, hoaDon, thanhLy, huy)
+│   ├── templates/    HTML for Puppeteer (hopDong, hoaDon, thanhLy, huy)
 │   └── config/       db.js · logger.js
 │
-├── shared/schemas/   Zod schemas dùng chung
+├── shared/schemas/   Shared Zod schemas
 ├── docker-compose.yml
 └── .env
 ```
 
-> Chi tiết từng module (models, routes, controllers, services, pages, hooks): xem [ModulesStructure.md](./ModulesStructure.md)
+> For per-module file details (models, routes, controllers, services, pages, hooks) see [ModulesStructure.md](./ModulesStructure.md)
 
 ---
 
@@ -63,10 +63,10 @@ Khu ──1:N──► Phong ──1:N──► LichSuGiaThuPhong
                                └──1:N──► HoaDon
 
 LoaiPhong ──1:N──► Phong
-          └──1:N──► DonGiaDichVu   (append-only, lấy bản ghi mới nhất theo ngày)
+          └──1:N──► DonGiaDichVu   (append-only, always fetch the most recent record by date)
 
 Phong ──1:N──► SuaChua
-Khu   ──1:N──► ChiPhiVanHanh (nullable)
+Khu   ──1:N──► ChiPhiVanHanh (nullable khu_id)
 ```
 
 **Indexes:**
@@ -79,16 +79,16 @@ Khu   ──1:N──► ChiPhiVanHanh (nullable)
 | KhachHang | `{ cmnd }` unique |
 | DonGiaDichVu | `{ loai_phong_id, loai_dv, ngay_ap_dung }` |
 
-> `DonGiaDichVu` và `LichSuGiaThuPhong` là append-only — không update bản ghi cũ để bảo toàn tính chính xác hóa đơn đã lập.
+> `DonGiaDichVu` and `LichSuGiaThuPhong` are append-only — old records are never updated, preserving the accuracy of previously issued invoices.
 
 ---
 
 ## 4. REST API
 
-Prefix `/api` · Response: `{ success, data }` hoặc `{ success, error }`
+Prefix `/api` · Response format: `{ success, data }` or `{ success, error }`
 
 ```
-# Danh mục
+# Catalog
 GET|POST              /api/khu
 GET|PUT|DELETE        /api/khu/:id
 GET|POST              /api/loai-phong
@@ -99,8 +99,8 @@ GET                   /api/phong/:id/lich-su-gia
 GET|POST              /api/don-gia
 GET                   /api/don-gia/lich-su
 
-# Khách hàng & Hợp đồng
-GET|POST|PUT          /api/khach-hang/:id        ?q= (tìm tên/CMND)
+# Customers & Contracts
+GET|POST|PUT          /api/khach-hang/:id        ?q= (search name/ID number)
 POST                  /api/dat-coc
 PUT                   /api/dat-coc/:id/huy
 GET|POST              /api/hop-dong              ?trang_thai&khu_id&tu&den&q
@@ -111,17 +111,17 @@ POST                  /api/hop-dong/:id/huy
 GET|POST              /api/hop-dong/:id/nguoi-o
 PUT|DELETE            /api/nguoi-o/:id
 
-# Hóa đơn
-GET                   /api/hoa-don/cho-lap       phòng chưa lập HĐ tháng này
-GET                   /api/hoa-don/tinh-truoc    preview (chưa lưu)
+# Invoices
+GET                   /api/hoa-don/cho-lap       rooms missing invoice this month
+GET                   /api/hoa-don/tinh-truoc    preview (not yet saved)
 GET|POST              /api/hoa-don
 PUT                   /api/hoa-don/:id/thanh-toan
 
-# Sửa chữa & Chi phí
+# Maintenance & Costs
 GET|POST|PUT          /api/sua-chua/:id
 GET|POST|PUT|DELETE   /api/chi-phi/:id
 
-# Dashboard & Thống kê
+# Dashboard & Statistics
 GET                   /api/dashboard/kpi
 GET                   /api/dashboard/canh-bao
 PUT                   /api/dashboard/canh-bao/:loai/:id/da-xem
@@ -129,7 +129,7 @@ GET                   /api/thong-ke              ?loai=thang|quy|nam&tu&den
 GET                   /api/thong-ke/:ky/hoa-don
 GET                   /api/bao-cao/cong-suat|no|doanh-thu-theo-phong
 
-# In & Xuất
+# Print & Export
 GET                   /api/in/hop-dong|hoa-don|thanh-ly|huy/:id   → PDF
 GET                   /api/xuat/doanh-thu|no|cong-suat            → Excel
 ```
@@ -141,18 +141,18 @@ GET                   /api/xuat/doanh-thu|no|cong-suat            → Excel
 ```
 Request → Morgan → cors → express.json → Router
   → validate(Zod) → Controller → Service → Mongoose → DB
-  → errorHandler (log Winston → trả 4xx/5xx)
+  → errorHandler (log via Winston → return 4xx/5xx)
 ```
 
-**Service layer** chứa toàn bộ business logic, controller chỉ parse req / trả res:
+**Service layer** contains all business logic; controllers only parse the request and send the response:
 
 ```
 POST /api/hoa-don  →  hoaDon.service.tinhHoaDon()
   1. getDonGiaHieuLuc(loai_phong, ngay)
   2. getSoNguoiOTrongThang(hop_dong_id, thang, nam)
-  3. tinhTienPhong()   — pro-rata + làm tròn 1.000đ
-  4. tinhNo()          — tổng HĐ chưa trả
-  5. lưu HoaDon
+  3. tinhTienPhong()   — pro-rata + round to nearest 1,000 VND
+  4. tinhNo()          — sum of all unpaid invoices
+  5. save HoaDon
 ```
 
 ---
@@ -160,50 +160,50 @@ POST /api/hoa-don  →  hoaDon.service.tinhHoaDon()
 ## 6. Frontend: Routes & State
 
 ```
-/                 Dashboard (KPI + cảnh báo)
-/khu              Quản lí khu
-/phong            Danh sách phòng
-/loai-phong       Loại phòng & đơn giá
-/khach-hang       Danh sách khách hàng
-/khach-hang/:id   Chi tiết KH
-/hop-dong         Danh sách hợp đồng
-/hop-dong/dat-coc Wizard đặt cọc
-/hop-dong/moi     Wizard làm hợp đồng
-/hop-dong/:id     Chi tiết hợp đồng
-/hoa-don/lap      Lên hóa đơn tháng
-/hoa-don/thanh-toan Thanh toán
-/thanh-ly         Thanh lý hợp đồng
-/huy              Hủy hợp đồng
-/nguoi-o          Quản lí người ở
-/sua-chua         Sửa chữa & bảo trì
-/thong-ke         Thống kê doanh thu
-/bao-cao          Báo cáo nâng cao
-/chi-phi          Chi phí vận hành
+/                    Dashboard (KPIs + alerts)
+/khu                 Area management
+/phong               Room list
+/loai-phong          Room types & service prices
+/khach-hang          Customer list
+/khach-hang/:id      Customer detail
+/hop-dong            Contract list
+/hop-dong/dat-coc    Deposit wizard
+/hop-dong/moi        New contract wizard
+/hop-dong/:id        Contract detail
+/hoa-don/lap         Create monthly invoice
+/hoa-don/thanh-toan  Payment processing
+/thanh-ly            Contract settlement
+/huy                 Contract cancellation
+/nguoi-o             Occupant management
+/sua-chua            Maintenance & repairs
+/thong-ke            Revenue statistics
+/bao-cao             Advanced reports
+/chi-phi             Operating costs
 ```
 
-| Loại state | Công cụ |
+| State type | Tool |
 |---|---|
-| Data từ server | TanStack Query — cache, refetch, loading tự động |
-| Form | React Hook Form + Zod resolver |
-| UI (modal, tab, filter) | useState / useReducer |
+| Server data | TanStack Query — cache, auto-refetch, automatic loading state |
+| Forms | React Hook Form + Zod resolver |
+| UI state (modal, tab, filter) | useState / useReducer |
 
 ---
 
-## 7. Luồng nghiệp vụ chính
+## 7. Main Business Flows
 
-**Lập hóa đơn:**
+**Create invoice:**
 ```
-Chọn phòng → GET /hoa-don/tinh-truoc → Preview → POST /hoa-don → GET /in/hoa-don/:id (PDF)
-```
-
-**Thanh lý:**
-```
-Tìm HĐ → Nhập bồi thường → Preview hoàn cọc → POST /hop-dong/:id/thanh-ly → PDF biên bản
+Select room → GET /hoa-don/tinh-truoc → Preview → POST /hoa-don → GET /in/hoa-don/:id (PDF)
 ```
 
-**Dashboard cảnh báo:**
+**Settlement:**
 ```
-Mở app → GET /dashboard/kpi + /canh-bao → Render thẻ → Click "Đã xem" → PUT /da-xem
+Find contract → Enter damages → Preview deposit refund → POST /hop-dong/:id/thanh-ly → PDF record
+```
+
+**Dashboard alerts:**
+```
+Open app → GET /dashboard/kpi + /canh-bao → Render cards → Click "Mark as seen" → PUT /da-xem
 ```
 
 ---
@@ -211,8 +211,8 @@ Mở app → GET /dashboard/kpi + /canh-bao → Render thẻ → Click "Đã xem
 ## 8. Deployment
 
 ```
-Máy chủ LAN
-  ├── nginx      :80   serve React build  →  proxy /api → server
+LAN Server
+  ├── nginx      :80   serves React build  →  proxies /api → server
   ├── server     :3001 Node.js + PM2
   └── mongo      :27017 volume ./data/db
 ```
@@ -225,18 +225,18 @@ services:
   client:  build: ./client  |  ports: ["80:80"]  |  depends_on: [server]
 ```
 
-Backup: `mongodump` → nén → lưu `./backups/` (thủ công).
+Backup: `mongodump` → compress → save to `./backups/` (manual).
 
 ---
 
-## 9. Quyết định kỹ thuật
+## 9. Technical Decisions
 
-| Quyết định | Lý do |
+| Decision | Reason |
 |---|---|
-| MongoDB | Schema linh hoạt cho lịch sử giá nhiều loại; không cần join |
-| Zod shared schema | Validate 1 lần, dùng cả 2 phía — tránh lỗi bất đồng bộ |
-| TanStack Query | Auto-refetch cảnh báo; bỏ boilerplate fetch/loading/error |
-| Puppeteer PDF | Template HTML/CSS dễ chỉnh hơn pdfkit; output như in từ trình duyệt |
-| Append-only lịch sử giá | Không sửa bản ghi cũ — hóa đơn đã lập không bị thay đổi hồi tố |
-| Service layer | Business logic tách khỏi HTTP — dễ test, dễ tái sử dụng |
-| Day.js | Tính pro-rata, đếm tháng nợ, kiểm tra 30 ngày — tránh bug timezone |
+| MongoDB | Flexible schema for multi-type price history; no joins needed |
+| Shared Zod schemas | Validate once, used on both sides — prevents client/server desync |
+| TanStack Query | Auto-refetch for alerts; eliminates fetch/loading/error boilerplate |
+| Puppeteer PDF | HTML/CSS templates are easier to maintain than pdfkit; output matches browser print exactly |
+| Append-only price history | Never modify old records — previously issued invoices are never retroactively changed |
+| Service layer | Business logic decoupled from HTTP — easy to test and reuse |
+| Day.js | Pro-rata calculation, consecutive debt month counting, 30-day expiry checks — avoids timezone bugs |

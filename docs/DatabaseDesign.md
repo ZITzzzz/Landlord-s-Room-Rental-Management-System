@@ -1,11 +1,11 @@
-# Database Design — Hệ thống quản lí cho thuê phòng trọ
+# Database Design — Room Rental Management System
 
 **Database:** MongoDB · **ODM:** Mongoose
-**Quy ước:** tên collection viết thường số nhiều (`phongs`, `hopdongs`...), field dùng snake_case.
+**Conventions:** collection names in lowercase plural (`phongs`, `hopdongs`...), fields in snake_case.
 
 ---
 
-## Sơ đồ quan hệ
+## Relationship Diagram
 
 ```
 Khu ──────────────────1:N──► Phong ◄──────────────── LoaiPhong
@@ -25,7 +25,7 @@ Khu ──────────────────1:N──► Phong ◄
 Khu ──────────────────1:N──► ChiPhiVanHanh (khu_id nullable)
 ```
 
-(*) DatCoc tham chiếu cả Phong và KhachHang
+(*) DatCoc references both Phong and KhachHang
 
 ---
 
@@ -35,12 +35,12 @@ Khu ──────────────────1:N──► ChiPhiVan
 
 ### 1. `khus`
 
-| Field | Type | Ràng buộc | Mô tả |
+| Field | Type | Constraint | Description |
 |---|---|---|---|
 | `_id` | ObjectId | PK | |
-| `ten` | String | required | Tên khu |
-| `dia_chi` | String | required | Địa chỉ |
-| `ghi_chu` | String | | Ghi chú tùy chọn |
+| `ten` | String | required | Area name |
+| `dia_chi` | String | required | Address |
+| `ghi_chu` | String | | Optional notes |
 | `createdAt` | Date | auto | |
 | `updatedAt` | Date | auto | |
 
@@ -48,26 +48,26 @@ Khu ──────────────────1:N──► ChiPhiVan
 
 ### 2. `loaiphongs`
 
-| Field | Type | Ràng buộc | Mô tả |
+| Field | Type | Constraint | Description |
 |---|---|---|---|
 | `_id` | ObjectId | PK | |
-| `ten` | String | required, unique | VD: "Phòng 1 người" |
-| `suc_chua` | Number | required, 1–4 | Số người tiêu chuẩn |
+| `ten` | String | required, unique | E.g. "Single Room" |
+| `suc_chua` | Number | required, 1–4 | Standard capacity |
 
 ---
 
 ### 3. `phongs`
 
-| Field | Type | Ràng buộc | Mô tả |
+| Field | Type | Constraint | Description |
 |---|---|---|---|
 | `_id` | ObjectId | PK | |
-| `ten` | String | required | Tên phòng |
+| `ten` | String | required | Room name |
 | `khu_id` | ObjectId | ref: Khu, required | |
 | `loai_phong_id` | ObjectId | ref: LoaiPhong, required | |
-| `gia_thue` | Number | required, > 0 | Giá thuê hiện tại (VND) |
+| `gia_thue` | Number | required, > 0 | Current rent (VND) |
 | `trang_thai` | String | enum, required | `trong` \| `cho_thue` \| `dat_coc` \| `sua_chua` |
-| `chi_so_dien_dau` | Number | default: 0 | Chỉ số điện khi lắp đồng hồ |
-| `chi_so_nuoc_dau` | Number | default: 0 | Chỉ số nước khi lắp đồng hồ |
+| `chi_so_dien_dau` | Number | default: 0 | Initial electricity reading when meter installed |
+| `chi_so_nuoc_dau` | Number | default: 0 | Initial water reading when meter installed |
 
 **Indexes:**
 ```js
@@ -75,47 +75,47 @@ Khu ──────────────────1:N──► ChiPhiVan
 { khu_id: 1, trang_thai: 1 }
 ```
 
-**Chuyển trạng thái:**
+**Status transitions:**
 ```
-trong ──► cho_thue   (khi ký hợp đồng)
-trong ──► dat_coc    (khi đặt cọc)
-trong ──► sua_chua   (khi tạo yêu cầu sửa chữa)
-dat_coc ──► cho_thue (khi ký hợp đồng từ cọc)
-dat_coc ──► trong    (khi hủy đặt cọc)
-cho_thue ──► trong   (khi thanh lý / hủy hợp đồng)
-sua_chua ──► trong   (khi hoàn thành sửa chữa)
+trong    ──► cho_thue   (on contract signing)
+trong    ──► dat_coc    (on deposit)
+trong    ──► sua_chua   (on repair request creation)
+dat_coc  ──► cho_thue   (on contract signing from deposit)
+dat_coc  ──► trong      (on deposit cancellation)
+cho_thue ──► trong      (on settlement / contract cancellation)
+sua_chua ──► trong      (on repair completion)
 ```
 
 ---
 
 ### 4. `lichsugiathues`
 
-> Append-only — không bao giờ update hay xóa bản ghi cũ.
+> Append-only — records are never updated or deleted.
 
-| Field | Type | Ràng buộc | Mô tả |
+| Field | Type | Constraint | Description |
 |---|---|---|---|
 | `_id` | ObjectId | PK | |
 | `phong_id` | ObjectId | ref: Phong, required | |
-| `gia_cu` | Number | required | Giá trước khi thay đổi |
-| `gia_moi` | Number | required | Giá sau khi thay đổi |
-| `ngay_ap_dung` | Date | required | Ngày giá mới có hiệu lực |
+| `gia_cu` | Number | required | Price before the change |
+| `gia_moi` | Number | required | Price after the change |
+| `ngay_ap_dung` | Date | required | Date the new price takes effect |
 
 ---
 
 ### 5. `dongiadichvus`
 
-> Append-only. Khi lập hóa đơn, lấy bản ghi có `ngay_ap_dung` mới nhất ≤ ngày lập hóa đơn.
+> Append-only. When creating an invoice, fetch the record with the most recent `ngay_ap_dung` ≤ invoice date.
 
-| Field | Type | Ràng buộc | Mô tả |
+| Field | Type | Constraint | Description |
 |---|---|---|---|
 | `_id` | ObjectId | PK | |
-| `loai_phong_id` | ObjectId | ref: LoaiPhong, required | null nếu áp dụng chung |
+| `loai_phong_id` | ObjectId | ref: LoaiPhong, required | null if applied to all room types |
 | `loai_dv` | String | enum, required | `dien` \| `nuoc` \| `ve_sinh` \| `xe_may` \| `xe_dap` |
-| `don_gia` | Number | required, > 0 | Đơn giá (VND/đơn vị) |
+| `don_gia` | Number | required, > 0 | Unit price (VND/unit) |
 | `ngay_ap_dung` | Date | required | |
 
-> `ve_sinh`, `xe_may`, `xe_dap` áp dụng đồng nhất mọi phòng → `loai_phong_id = null`
-> `dien`, `nuoc` riêng theo loại phòng → `loai_phong_id` có giá trị
+> `ve_sinh`, `xe_may`, `xe_dap` apply uniformly to all rooms → `loai_phong_id = null`
+> `dien`, `nuoc` vary by room type → `loai_phong_id` has a value
 
 **Index:**
 ```js
@@ -126,18 +126,18 @@ sua_chua ──► trong   (khi hoàn thành sửa chữa)
 
 ### 6. `khachhangs`
 
-| Field | Type | Ràng buộc | Mô tả |
+| Field | Type | Constraint | Description |
 |---|---|---|---|
 | `_id` | ObjectId | PK | |
-| `ho_ten` | String | required | |
-| `ngay_sinh` | Date | | |
-| `cmnd` | String | required, unique | Số CMND/CCCD |
-| `so_dien_thoai` | String | required | |
-| `que_quan` | String | | |
+| `ho_ten` | String | required | Full name |
+| `ngay_sinh` | Date | | Date of birth |
+| `cmnd` | String | required, unique | National ID number |
+| `so_dien_thoai` | String | required | Phone number |
+| `que_quan` | String | | Hometown |
 
-**Index:**
+**Indexes:**
 ```js
-{ cmnd: 1 }  // unique
+{ cmnd: 1 }         // unique
 { ho_ten: "text" }  // text search
 ```
 
@@ -145,237 +145,237 @@ sua_chua ──► trong   (khi hoàn thành sửa chữa)
 
 ### 7. `datcocs`
 
-| Field | Type | Ràng buộc | Mô tả |
+| Field | Type | Constraint | Description |
 |---|---|---|---|
 | `_id` | ObjectId | PK | |
 | `phong_id` | ObjectId | ref: Phong, required | |
 | `khach_hang_id` | ObjectId | ref: KhachHang, required | |
-| `so_tien` | Number | required, > 0 | Tiền đặt cọc |
+| `so_tien` | Number | required, > 0 | Deposit amount |
 | `ngay_dat_coc` | Date | required | |
 | `trang_thai` | String | enum | `con_hieu_luc` \| `da_chuyen_hop_dong` \| `huy` |
-| `ly_do_huy` | String | | Điền khi hủy |
+| `ly_do_huy` | String | | Filled when cancelled |
 
 ---
 
 ### 8. `hopdongs`
 
-| Field | Type | Ràng buộc | Mô tả |
+| Field | Type | Constraint | Description |
 |---|---|---|---|
 | `_id` | ObjectId | PK | |
 | `phong_id` | ObjectId | ref: Phong, required | |
 | `khach_hang_id` | ObjectId | ref: KhachHang, required | |
-| `ngay_bat_dau` | Date | required | Không được sớm hơn 30 ngày trước hôm nay |
-| `ngay_het_han` | Date | required | Phải sau `ngay_bat_dau` ít nhất 1 tháng |
-| `gia_thue_ky_hop_dong` | Number | required | Snapshot giá thuê tại thời điểm ký |
-| `tien_dat_coc` | Number | required, > 0 | = 1 tháng tiền thuê |
-| `so_nguoi_o` | Number | required, ≥ 1 | Số người ở thực tế khi vào |
+| `ngay_bat_dau` | Date | required | Cannot be earlier than 30 days before today |
+| `ngay_het_han` | Date | required | Must be at least 1 month after `ngay_bat_dau` |
+| `gia_thue_ky_hop_dong` | Number | required | Snapshot of rent at time of signing |
+| `tien_dat_coc` | Number | required, > 0 | = 1 month's rent |
+| `so_nguoi_o` | Number | required, ≥ 1 | Actual occupants at move-in |
 | `trang_thai` | String | enum | `hieu_luc` \| `thanh_ly` \| `huy` |
-| `ngay_thanh_ly` | Date | | Điền khi thanh lý |
-| `ngay_huy` | Date | | Điền khi hủy |
-| `ly_do_huy` | String | | |
+| `ngay_thanh_ly` | Date | | Filled on settlement |
+| `ngay_huy` | Date | | Filled on cancellation |
+| `ly_do_huy` | String | | Cancellation reason |
 
 **Indexes:**
 ```js
 { phong_id: 1, trang_thai: 1 }
 { khach_hang_id: 1 }
-{ ngay_het_han: 1, trang_thai: 1 }  // cho query cảnh báo sắp hết hạn
+{ ngay_het_han: 1, trang_thai: 1 }  // for expiry alert query
 ```
 
-> `gia_thue_ky_hop_dong` là snapshot — lưu giá tại thời điểm ký để tham chiếu hợp đồng in ra, không bị ảnh hưởng khi giá phòng thay đổi sau này.
+> `gia_thue_ky_hop_dong` is a snapshot — stores the price at signing so printed contracts are accurate even after room rent changes.
 
 ---
 
 ### 9. `lichsugiahans`
 
-| Field | Type | Ràng buộc | Mô tả |
+| Field | Type | Constraint | Description |
 |---|---|---|---|
 | `_id` | ObjectId | PK | |
 | `hop_dong_id` | ObjectId | ref: HopDong, required | |
-| `ngay_gia_han` | Date | required | Ngày thực hiện gia hạn |
-| `han_cu` | Date | required | Ngày hết hạn trước đó |
-| `han_moi` | Date | required | Ngày hết hạn mới |
+| `ngay_gia_han` | Date | required | Date the renewal was performed |
+| `han_cu` | Date | required | Previous expiry date |
+| `han_moi` | Date | required | New expiry date |
 
 ---
 
 ### 10. `nguoios`
 
-| Field | Type | Ràng buộc | Mô tả |
+| Field | Type | Constraint | Description |
 |---|---|---|---|
 | `_id` | ObjectId | PK | |
 | `hop_dong_id` | ObjectId | ref: HopDong, required | |
-| `ho_ten` | String | required | |
-| `cmnd` | String | | |
-| `ngay_bat_dau` | Date | required | Ngày bắt đầu ở |
-| `ngay_ket_thuc` | Date | | null = đang ở |
+| `ho_ten` | String | required | Full name |
+| `cmnd` | String | | National ID number |
+| `ngay_bat_dau` | Date | required | Move-in date |
+| `ngay_ket_thuc` | Date | | null = currently residing |
 
 **Index:**
 ```js
 { hop_dong_id: 1, ngay_bat_dau: 1 }
 ```
 
-> Query số người ở trong tháng T:
-> `ngay_bat_dau <= cuoi_thang_T` AND (`ngay_ket_thuc >= dau_thang_T` OR `ngay_ket_thuc = null`)
+> Query occupants in month T:
+> `ngay_bat_dau <= end_of_month_T` AND (`ngay_ket_thuc >= start_of_month_T` OR `ngay_ket_thuc = null`)
 
 ---
 
 ### 11. `hoadons`
 
-| Field | Type | Ràng buộc | Mô tả |
+| Field | Type | Constraint | Description |
 |---|---|---|---|
 | `_id` | ObjectId | PK | |
 | `hop_dong_id` | ObjectId | ref: HopDong, required | |
-| `thang` | Number | required, 1–12 | |
-| `nam` | Number | required, > 2000 | |
-| `chi_so_dien_cu` | Number | required, ≥ 0 | |
-| `chi_so_dien_moi` | Number | required, ≥ `chi_so_dien_cu` | |
-| `chi_so_nuoc_cu` | Number | required, ≥ 0 | |
-| `chi_so_nuoc_moi` | Number | required, ≥ `chi_so_nuoc_cu` | |
-| `so_xe_may` | Number | required, ≥ 0 | |
-| `so_xe_dap` | Number | required, ≥ 0 | |
-| `don_gia_dien` | Number | required | Snapshot đơn giá tại thời điểm lập |
+| `thang` | Number | required, 1–12 | Month |
+| `nam` | Number | required, > 2000 | Year |
+| `chi_so_dien_cu` | Number | required, ≥ 0 | Old electricity reading |
+| `chi_so_dien_moi` | Number | required, ≥ `chi_so_dien_cu` | New electricity reading |
+| `chi_so_nuoc_cu` | Number | required, ≥ 0 | Old water reading |
+| `chi_so_nuoc_moi` | Number | required, ≥ `chi_so_nuoc_cu` | New water reading |
+| `so_xe_may` | Number | required, ≥ 0 | Motorbike count |
+| `so_xe_dap` | Number | required, ≥ 0 | Bicycle count |
+| `don_gia_dien` | Number | required | Snapshot of electricity rate at invoice creation |
 | `don_gia_nuoc` | Number | required | Snapshot |
 | `don_gia_ve_sinh` | Number | required | Snapshot |
 | `don_gia_xe_may` | Number | required | Snapshot |
 | `don_gia_xe_dap` | Number | required | Snapshot |
-| `so_nguoi_o` | Number | required | Snapshot số người ở trong tháng |
-| `no_thang_truoc` | Number | default: 0 | Tổng nợ kỳ trước chưa thanh toán |
-| `tong_tien` | Number | required | Tổng cộng toàn bộ khoản |
+| `so_nguoi_o` | Number | required | Snapshot of occupant count for the month |
+| `no_thang_truoc` | Number | default: 0 | Total unpaid balance from previous period |
+| `tong_tien` | Number | required | Grand total of all charges |
 | `trang_thai` | String | enum | `chua_thanh_toan` \| `da_thanh_toan` |
-| `ngay_lap` | Date | required | Ngày tạo hóa đơn |
-| `han_thanh_toan` | Date | required | = `ngay_lap` + 7 ngày |
-| `ngay_thanh_toan` | Date | | Điền khi thanh toán |
+| `ngay_lap` | Date | required | Invoice creation date |
+| `han_thanh_toan` | Date | required | = `ngay_lap` + 7 days |
+| `ngay_thanh_toan` | Date | | Filled on payment |
 | `phuong_thuc` | String | enum | `tien_mat` \| `chuyen_khoan` |
-| `ma_giao_dich` | String | | Mã CK ngân hàng (tùy chọn) |
+| `ma_giao_dich` | String | | Bank transfer reference (optional) |
 
 **Indexes:**
 ```js
 { hop_dong_id: 1, thang: 1, nam: 1 }  // unique
-{ trang_thai: 1, han_thanh_toan: 1 }   // cho query cảnh báo quá hạn
+{ trang_thai: 1, han_thanh_toan: 1 }   // for overdue alert query
 ```
 
-**Công thức tính `tong_tien`:**
+**Formula for `tong_tien`:**
 ```
-tien_phong    = gia_thue × (ngay_o / tong_ngay_thang)  [làm tròn 1.000đ, tháng đầu/cuối]
-              = gia_thue  [các tháng giữa]
-tien_dien     = (chi_so_dien_moi - chi_so_dien_cu) × don_gia_dien
-tien_nuoc     = (chi_so_nuoc_moi - chi_so_nuoc_cu) × don_gia_nuoc
-tien_ve_sinh  = so_nguoi_o × don_gia_ve_sinh
-tien_xe_may   = so_xe_may × don_gia_xe_may
-tien_xe_dap   = so_xe_dap × don_gia_xe_dap
-tong_tien     = tien_phong + tien_dien + tien_nuoc + tien_ve_sinh
-              + tien_xe_may + tien_xe_dap + no_thang_truoc
+rent_fee      = gia_thue × (days_stayed / total_days_in_month)  [rounded to 1,000 VND, first/last month]
+              = gia_thue  [full months in between]
+electricity   = (chi_so_dien_moi - chi_so_dien_cu) × don_gia_dien
+water         = (chi_so_nuoc_moi - chi_so_nuoc_cu) × don_gia_nuoc
+sanitation    = so_nguoi_o × don_gia_ve_sinh
+motorbike     = so_xe_may × don_gia_xe_may
+bicycle       = so_xe_dap × don_gia_xe_dap
+tong_tien     = rent_fee + electricity + water + sanitation
+              + motorbike + bicycle + no_thang_truoc
 ```
 
-> Các trường `don_gia_*` và `so_nguoi_o` là **snapshot** — đảm bảo hóa đơn đã lập không thay đổi khi đơn giá cập nhật sau này.
+> `don_gia_*` and `so_nguoi_o` fields are **snapshots** — they ensure issued invoices remain unchanged when prices are updated later.
 
 ---
 
 ### 12. `suachuas`
 
-| Field | Type | Ràng buộc | Mô tả |
+| Field | Type | Constraint | Description |
 |---|---|---|---|
 | `_id` | ObjectId | PK | |
 | `phong_id` | ObjectId | ref: Phong, required | |
-| `mo_ta` | String | required | Mô tả sự cố |
-| `ngay_phat_sinh` | Date | required | |
-| `chi_phi_du_kien` | Number | ≥ 0 | |
-| `chi_phi_thuc_te` | Number | ≥ 0 | Điền khi hoàn thành |
+| `mo_ta` | String | required | Issue description |
+| `ngay_phat_sinh` | Date | required | Date the issue occurred |
+| `chi_phi_du_kien` | Number | ≥ 0 | Estimated cost |
+| `chi_phi_thuc_te` | Number | ≥ 0 | Actual cost; filled when completed |
 | `trang_thai` | String | enum | `cho_xu_ly` \| `dang_xu_ly` \| `hoan_thanh` |
-| `do_kh_gay_ra` | Boolean | default: false | Có thể khấu trừ vào cọc khi thanh lý |
+| `do_kh_gay_ra` | Boolean | default: false | If true, may be deducted from deposit at settlement |
 
 ---
 
 ### 13. `chiphivanhanhS`
 
-| Field | Type | Ràng buộc | Mô tả |
+| Field | Type | Constraint | Description |
 |---|---|---|---|
 | `_id` | ObjectId | PK | |
-| `khu_id` | ObjectId | ref: Khu, nullable | null = áp dụng chung |
-| `thang` | Number | required, 1–12 | |
-| `nam` | Number | required, > 2000 | |
+| `khu_id` | ObjectId | ref: Khu, nullable | null = applies to all areas |
+| `thang` | Number | required, 1–12 | Month |
+| `nam` | Number | required, > 2000 | Year |
 | `loai` | String | enum, required | `dien_nuoc_tong` \| `sua_chua_chung` \| `khac` |
-| `so_tien` | Number | required, > 0 | |
-| `ghi_chu` | String | | |
+| `so_tien` | Number | required, > 0 | Amount (VND) |
+| `ghi_chu` | String | | Notes |
 
 ---
 
 ### 14. `canhbaodaxems`
 
-| Field | Type | Ràng buộc | Mô tả |
+| Field | Type | Constraint | Description |
 |---|---|---|---|
 | `_id` | ObjectId | PK | |
 | `loai_canh_bao` | String | required | `phong_chua_hd` \| `hd_sap_den_han` \| `hd_qua_han` \| `nguy_co_huy` \| `hop_dong_sap_het` |
-| `tham_chieu_id` | ObjectId | required | ID của phòng/hóa đơn/hợp đồng liên quan |
-| `ngay_xem` | Date | required | Ngày QL bấm "Đã xem" |
+| `tham_chieu_id` | ObjectId | required | ID of the related room/invoice/contract |
+| `ngay_xem` | Date | required | Date the manager clicked "Mark as seen" |
 
 **Index:**
 ```js
 { loai_canh_bao: 1, tham_chieu_id: 1, ngay_xem: 1 }
 ```
 
-> Mỗi ngày mở app, lọc bỏ các bản ghi có `ngay_xem = hôm nay`. Nếu điều kiện cảnh báo vẫn còn tồn tại vào hôm sau → cảnh báo hiện lại tự động.
+> Each time the app opens, filter out records where `ngay_xem = today`. If the alert condition still exists the next day, the alert reappears automatically.
 
 ---
 
-## Snapshot pattern
+## Snapshot Pattern
 
-Các trường snapshot được lưu trực tiếp trong document thay vì reference, để bảo toàn dữ liệu lịch sử:
+Snapshot fields are stored directly in the document instead of being referenced, to preserve historical accuracy:
 
-| Document | Trường snapshot | Lý do |
+| Document | Snapshot fields | Reason |
 |---|---|---|
-| `HopDong` | `gia_thue_ky_hop_dong` | In hợp đồng đúng giá lúc ký dù giá phòng thay đổi sau |
-| `HoaDon` | `don_gia_dien/nuoc/ve_sinh/xe_may/xe_dap`, `so_nguoi_o` | Hóa đơn đã lập không bị thay đổi khi đơn giá cập nhật |
+| `HopDong` | `gia_thue_ky_hop_dong` | Printed contracts show the correct price at signing, even if room rent changes later |
+| `HoaDon` | `don_gia_dien/nuoc/ve_sinh/xe_may/xe_dap`, `so_nguoi_o` | Issued invoices are not affected when prices are updated |
 
 ---
 
-## Append-only collections
+## Append-Only Collections
 
-Không bao giờ update hoặc xóa bản ghi trong:
+Records in these collections are never updated or deleted:
 
-| Collection | Cách query bản ghi hiện tại |
+| Collection | How to query the current record |
 |---|---|
-| `dongiadichvus` | `ngay_ap_dung ≤ ngay_lap_hoa_don`, sort `-ngay_ap_dung`, limit 1 |
-| `lichsugiathues` | `ngay_ap_dung ≤ ngay_can_biet`, sort `-ngay_ap_dung`, limit 1 |
-| `lichsugiahans` | Lấy tất cả theo `hop_dong_id`, sort `ngay_gia_han` |
+| `dongiadichvus` | `ngay_ap_dung ≤ invoice_date`, sort `-ngay_ap_dung`, limit 1 |
+| `lichsugiathues` | `ngay_ap_dung ≤ query_date`, sort `-ngay_ap_dung`, limit 1 |
+| `lichsugiahans` | Fetch all by `hop_dong_id`, sort by `ngay_gia_han` |
 
 ---
 
-## Queries quan trọng
+## Important Queries
 
-### Tính số người ở trong tháng
+### Count occupants in a month
 ```js
 NguoiO.find({
   hop_dong_id: id,
-  ngay_bat_dau: { $lte: cuoi_thang },
+  ngay_bat_dau: { $lte: end_of_month },
   $or: [
     { ngay_ket_thuc: null },
-    { ngay_ket_thuc: { $gte: dau_thang } }
+    { ngay_ket_thuc: { $gte: start_of_month } }
   ]
 })
 ```
 
-### Lấy đơn giá có hiệu lực
+### Fetch effective service price
 ```js
 DonGiaDichVu.findOne({
-  loai_phong_id: id,   // null cho ve_sinh/xe_may/xe_dap
+  loai_phong_id: id,   // null for ve_sinh/xe_may/xe_dap
   loai_dv: 'dien',
-  ngay_ap_dung: { $lte: ngay_lap_hoa_don }
+  ngay_ap_dung: { $lte: invoice_date }
 }).sort({ ngay_ap_dung: -1 })
 ```
 
-### Phát hiện KH nợ ≥ 2 tháng liên tiếp
+### Detect customer with debt ≥ 2 consecutive months
 ```js
-// Lấy hóa đơn chưa thanh toán của 1 hợp đồng, sort theo thang/nam
-// Kiểm tra có ≥ 2 bản ghi liên tiếp (tháng kế nhau) không
+// Fetch unpaid invoices for a contract, sorted by month/year
+// Check whether ≥ 2 consecutive records exist (adjacent months)
 HoaDon.find({ hop_dong_id: id, trang_thai: 'chua_thanh_toan' })
   .sort({ nam: 1, thang: 1 })
-// → kiểm tra (thang[i+1] - thang[i] === 1) hoặc (nam[i+1] - nam[i] === 1 và thang[i+1] === 1 và thang[i] === 12)
+// → check (thang[i+1] - thang[i] === 1) or (nam[i+1] - nam[i] === 1 && thang[i+1] === 1 && thang[i] === 12)
 ```
 
-### Phòng chưa lập hóa đơn tháng này
+### Rooms missing an invoice for the current month
 ```js
-// Lấy tất cả hop_dong đang hieu_luc
-// Với mỗi hop_dong, kiểm tra không có HoaDon với thang=T, nam=Y
+// Fetch all active contracts
+// For each contract, check there is no HoaDon with thang=T, nam=Y
 HopDong.find({ trang_thai: 'hieu_luc' })
-// → filter những hop_dong không có HoaDon (thang, nam) tương ứng
+// → filter contracts that have no matching HoaDon for (thang, nam)
 ```
