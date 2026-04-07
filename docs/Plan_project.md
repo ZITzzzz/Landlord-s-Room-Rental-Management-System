@@ -2,11 +2,12 @@
 
 > All API responses follow the envelope: `{ success: true, data: ... }` on success, `{ success: false, error: string }` on failure.
 > All IDs are MongoDB ObjectId strings.
+>
+> **Development order:** Each module is completed end-to-end (BE → FE) before moving to the next, so every module can be manually tested immediately after it's built.
 
 ---
 
-
-## PHASE 0 — Project Initialization & Database
+## PHASE 0 — Project Initialization
 
 ### T0.1 Project Structure
 - [ ] Initialize 2 folders: `client/` (React + Vite) and `server/` (Node.js)
@@ -222,17 +223,24 @@ interface CanhBaoDaXem {
 ### T0.3 Seed Data
 - [ ] Seed script: 2 areas, 2 room types, 5 rooms, 3 customers, sample service prices, 2 contracts, several invoices
 
+### T0.4 App Shell (Frontend)
+- [ ] Shared layout: sidebar navigation + header
+- [ ] React Router: define all routes (placeholders OK at this stage)
+- [ ] Axios instance (`api/axiosInstance.js`) with base URL + response unwrapping + error toast interceptor
+- [ ] Winston + Morgan logging configured on server
+
 ---
 
-## PHASE 1 — Backend API: Catalog (Modules 4.1, 4.2, 4.13)
+## MODULE 1 — Areas & Room Types (Danh mục: Khu, Loại phòng)
 
-### T1.1 Area API
+> Modules 4.1, 4.2 | Dependencies: none — good first module to verify the full stack works
+
+### M1-BE: Area API
 
 ```
 GET /api/khu
 ```
 ```ts
-// Query: none
 // Response
 { success: true, data: Array<Khu & { so_phong: number, so_phong_dang_thue: number }> }
 ```
@@ -267,9 +275,7 @@ DELETE /api/khu/:id
 // Error 400: { success: false, error: 'Area still has active or rented rooms' }
 ```
 
----
-
-### T1.2 Room Type API
+### M1-BE: Room Type API
 
 ```
 GET /api/loai-phong
@@ -308,9 +314,18 @@ DELETE /api/loai-phong/:id
 // Error 400: { success: false, error: 'Room type is in use by existing rooms' }
 ```
 
+### M1-FE: Area & Room Type Pages
+- [ ] Area Management page: table with `so_phong` / `so_phong_dang_thue` columns + add/edit inline modal + delete with confirm dialog
+- [ ] Room Types page: table + add/edit modal + delete with confirm dialog
+- [ ] Both pages: loading skeleton, success/error toasts
+
 ---
 
-### T1.3 Room API
+## MODULE 2 — Rooms & Service Prices (Phòng, Đơn giá dịch vụ)
+
+> Module 4.13 | Dependencies: M1 (needs Khu + LoaiPhong to exist)
+
+### M2-BE: Room API
 
 ```
 GET /api/phong
@@ -379,9 +394,7 @@ DELETE /api/phong/:id
 // Error 400: { success: false, error: 'Room is not vacant' | 'Room has unpaid invoices' }
 ```
 
----
-
-### T1.4 Service Price API
+### M2-BE: Service Price API
 
 ```
 GET /api/don-gia
@@ -420,11 +433,17 @@ getDonGiaHieuLuc(loai_phong_id: string | null, loai_dv: string, ngay: Date): Pro
 // Returns the don_gia of the most recent record where ngay_ap_dung <= ngay
 ```
 
+### M2-FE: Room & Service Price Pages
+- [ ] Room Management page: table filterable by area/status + color-coded status badges + add/edit modal + delete confirm + price history drawer
+- [ ] Room Types & Service Prices page: current price table per room type + update form (sets new `ngay_ap_dung`) + price history per service type
+
 ---
 
-## PHASE 2 — Backend API: Customers & Contracts (Modules 4.3–4.6, 4.17)
+## MODULE 3 — Customers (Khách hàng)
 
-### T2.1 Customer API
+> Module 4.3 | Dependencies: none (standalone)
+
+### M3-BE: Customer API
 
 ```
 GET /api/khach-hang
@@ -469,9 +488,17 @@ PUT /api/khach-hang/:id
 { success: true, data: KhachHang }
 ```
 
+### M3-FE: Customer Pages
+- [ ] Customer list page: debounced search bar, table with `phong_dang_thue` column + add modal
+- [ ] Customer detail page: info section + edit form + contract history table + debt per room table
+
 ---
 
-### T2.2 Deposit API
+## MODULE 4 — Deposits (Đặt cọc)
+
+> Module 4.4 | Dependencies: M2 (rooms), M3 (customers)
+
+### M4-BE: Deposit API
 
 ```
 POST /api/dat-coc
@@ -497,9 +524,17 @@ PUT /api/dat-coc/:id/huy
 { success: true, data: DatCoc }
 ```
 
+### M4-FE: Deposit Wizard
+- [ ] Deposit wizard: select vacant room → enter customer (search existing or create) → enter deposit amount → confirm
+- [ ] Cancel deposit button on room detail / contract detail → confirm dialog + reason input
+
 ---
 
-### T2.3 Contract API
+## MODULE 5 — Contracts & Occupants (Hợp đồng, Người ở)
+
+> Modules 4.5, 4.6, 4.17 | Dependencies: M2, M3, M4
+
+### M5-BE: Contract API
 
 ```
 GET /api/hop-dong
@@ -568,9 +603,7 @@ GET /api/hop-dong/:id/lich-su-gia-han
 { success: true, data: LichSuGiaHan[] }
 ```
 
----
-
-### T2.4 Occupant API
+### M5-BE: Occupant API
 
 ```
 GET /api/hop-dong/:id/nguoi-o
@@ -612,11 +645,20 @@ getSoNguoiOTrongThang(hop_dong_id: string, thang: number, nam: number): Promise<
 // Count NguoiO where ngay_bat_dau <= end_of_month AND (ngay_ket_thuc >= start_of_month OR ngay_ket_thuc = null)
 ```
 
+### M5-FE: Contract & Occupant Pages
+- [ ] Contract list page: filter by status/area/date range/search, table, click to view detail
+- [ ] Contract creation wizard: find room → enter customer → enter dates + deposit + initial occupants → preview → confirm
+- [ ] Contract detail page: info + occupant list + renewal history + unpaid invoice list
+- [ ] Contract renewal form (modal): new expiry date picker → confirm
+- [ ] Occupant management: list per contract + add form + set end date + delete (with over-capacity warning)
+
 ---
 
-## PHASE 3 — Backend API: Invoices & Payments (Modules 4.7, 4.8)
+## MODULE 6 — Invoices & Payments (Hóa đơn, Thanh toán)
 
-### T3.1 Invoice API
+> Modules 4.7, 4.8 | Dependencies: M5 (contracts), M2 (service prices via internal helper)
+
+### M6-BE: Invoice API
 
 ```
 GET /api/hoa-don
@@ -706,9 +748,7 @@ tinhTienPhong(hop_dong: HopDong, thang: number, nam: number): number
 // Last month (ngay_het_han is mid-month) → same formula
 ```
 
----
-
-### T3.2 Payment API
+### M6-BE: Payment API
 
 ```
 PUT /api/hoa-don/:id/thanh-toan
@@ -723,11 +763,18 @@ PUT /api/hoa-don/:id/thanh-toan
 // Error 400: { success: false, error: 'Invoice already paid' }
 ```
 
+### M6-FE: Invoice & Payment Pages
+- [ ] Invoice creation page: month/year picker → list of rooms without invoice → click room → entry form (meter readings, vehicles) → live preview (calls `tinh-truoc`) → confirm → print PDF button
+- [ ] Invoice list page: filter by contract/room/month/status
+- [ ] Payment page: find unpaid invoice → show full breakdown → select payment method → confirm
+
 ---
 
-## PHASE 4 — Backend API: Settlement & Cancellation (Modules 4.10, 4.11)
+## MODULE 7 — Settlement & Cancellation (Thanh lý, Hủy hợp đồng)
 
-### T4.1 Settlement API
+> Modules 4.10, 4.11 | Dependencies: M5 (contracts), M6 (invoices for debt calculation)
+
+### M7-BE: Settlement API
 
 ```
 POST /api/hop-dong/:id/thanh-ly
@@ -751,9 +798,7 @@ POST /api/hop-dong/:id/thanh-ly
 }
 ```
 
----
-
-### T4.2 Contract Cancellation API
+### M7-BE: Contract Cancellation API
 
 ```
 POST /api/hop-dong/:id/huy
@@ -775,11 +820,17 @@ POST /api/hop-dong/:id/huy
 // Error 400: { success: false, error: 'Cancellation requires >= 2 consecutive unpaid months' }
 ```
 
+### M7-FE: Settlement & Cancellation Pages
+- [ ] Settlement form: search active contract → enter move-out date + damage description + compensation → show deposit refund calculation → confirm → print PDF button
+- [ ] Cancellation form: search contract → show list of unpaid invoices + reason input → confirm → print PDF button
+
 ---
 
-## PHASE 5 — Backend API: Repairs & Costs (Modules 4.16, 4.18)
+## MODULE 8 — Repairs (Sửa chữa)
 
-### T5.1 Repair API
+> Module 4.16 | Dependencies: M2 (rooms)
+
+### M8-BE: Repair API
 
 ```
 GET /api/sua-chua
@@ -797,6 +848,7 @@ POST /api/sua-chua
 ```ts
 // Request body
 { phong_id: string, mo_ta: string, ngay_phat_sinh: string, chi_phi_du_kien?: number, do_kh_gay_ra?: boolean }
+// Side effect: Phong.trang_thai → 'sua_chua'
 // Response
 { success: true, data: SuaChua }
 ```
@@ -812,9 +864,16 @@ PUT /api/sua-chua/:id
 { success: true, data: SuaChua }
 ```
 
+### M8-FE: Repair Management Page
+- [ ] Repair list page: filter by room/status + create form + update status form + actual cost input
+
 ---
 
-### T5.2 Operating Cost API
+## MODULE 9 — Operating Costs (Chi phí vận hành)
+
+> Module 4.18 | Dependencies: M1 (areas)
+
+### M9-BE: Operating Cost API
 
 ```
 GET /api/chi-phi
@@ -854,11 +913,16 @@ DELETE /api/chi-phi/:id
 { success: true, data: { message: 'Deleted successfully' } }
 ```
 
+### M9-FE: Operating Costs Page
+- [ ] Table filterable by month/area + add/edit/delete form
+
 ---
 
-## PHASE 6 — Backend API: Dashboard & Statistics (Modules 4.9, 4.14, 4.15)
+## MODULE 10 — Dashboard (Tổng quan)
 
-### T6.1 Dashboard API
+> Module 4.9 | Dependencies: all prior modules (reads from all collections)
+
+### M10-BE: Dashboard API
 
 ```
 GET /api/dashboard/kpi
@@ -897,9 +961,17 @@ PUT /api/dashboard/canh-bao/:loai/:id/da-xem
 { success: true, data: CanhBaoDaXem }
 ```
 
+### M10-FE: Dashboard Page
+- [ ] 4 KPI cards: occupancy rate per area, monthly revenue, contracts expiring soon, rooms under repair
+- [ ] Grouped alert cards (5 alert types) with View Details link and Mark as Seen button
+
 ---
 
-### T6.2 Statistics API
+## MODULE 11 — Statistics & Reports (Thống kê, Báo cáo)
+
+> Modules 4.14, 4.15 | Dependencies: M6 (invoices), M9 (operating costs)
+
+### M11-BE: Statistics API
 
 ```
 GET /api/thong-ke
@@ -934,9 +1006,7 @@ GET /api/thong-ke/:ky/hoa-don
 }
 ```
 
----
-
-### T6.3 Reports API
+### M11-BE: Reports API
 
 ```
 GET /api/bao-cao/cong-suat
@@ -988,59 +1058,18 @@ GET /api/bao-cao/doanh-thu-theo-phong
 }
 ```
 
----
-
-## PHASE 7 — React Frontend
-
-### T7.1 Layout & Router
-- [ ] Shared layout: sidebar navigation + header
-- [ ] React Router: define all routes
-- [ ] Axios instance with base URL + error interceptor
-
-### T7.2 Dashboard Page
-- [ ] 4 KPI cards (occupancy rate, monthly revenue, expiring contracts, rooms under repair)
-- [ ] Grouped alert cards with View Details and Mark as Seen buttons
-
-### T7.3 Catalog Management
-- [ ] Area Management page (table + add/edit form + delete with confirm dialog)
-- [ ] Room Management page (table filtered by area/status + color badges + form + price history)
-- [ ] Room Types & Service Prices page (current price table + update form + view history)
-
-### T7.4 Customers
-- [ ] Customer list page (search, table)
-- [ ] Customer detail page (info + contract history + debt per room)
-
-### T7.5 Contracts
-- [ ] Contract list page (filter + table + click to view detail)
-- [ ] Deposit wizard: select room → enter customer + deposit amount
-- [ ] Contract wizard: find room → enter customer → preview contract → confirm → print PDF
-- [ ] Contract renewal form
-
-### T7.6 Invoices & Payments
-- [ ] Invoice creation page: rooms without invoice → click → entry form → preview → confirm → print PDF
-- [ ] Payment page: find invoice → show detail → select payment method → confirm
-
-### T7.7 Settlement & Cancellation
-- [ ] Settlement form: find contract (select room if multiple) → enter move-out info → deposit refund calculation → confirm → print PDF
-- [ ] Cancellation form: find contract → show unpaid invoice list → confirm → print PDF
-
-### T7.8 Occupants & Repairs
-- [ ] Occupant management page per room (list + add/remove + over-capacity warning)
-- [ ] Repair management page (list + create form + update status + actual cost)
-
-### T7.9 Statistics & Reports
-- [ ] Revenue statistics page (select period → revenue/cost/profit table → click to view invoice detail)
-- [ ] Advanced reports page (occupancy, debt, revenue by room)
-- [ ] Export to Excel + PDF button for each report
-
-### T7.10 Operating Costs
-- [ ] Operating costs page (table filtered by month/area + add/edit/delete form)
+### M11-FE: Statistics & Reports Pages
+- [ ] Revenue statistics page: period type selector (month/quarter/year) + date range → revenue/cost/profit table with Recharts bar chart → click row to view invoice detail
+- [ ] Advanced reports page: occupancy report (table + chart), debt report (table), revenue-by-room report (table)
+- [ ] Export to Excel + PDF button for each report (calls M12 export endpoints)
 
 ---
 
-## PHASE 8 — Print & Export (NFR-2, NFR-7)
+## MODULE 12 — Print & Export (PDF, Excel)
 
-### T8.1 PDF Generation (Puppeteer)
+> NFR-2, NFR-7 | Dependencies: all prior modules; integrate print buttons into their respective pages
+
+### M12-BE: PDF Generation (Puppeteer)
 
 ```
 GET /api/in/hop-dong/:id
@@ -1060,9 +1089,7 @@ GET /api/in/huy/:hop_dong_id
 - [ ] HTML template: settlement record
 - [ ] HTML template: cancellation record
 
----
-
-### T8.2 Excel Export (ExcelJS)
+### M12-BE: Excel Export (ExcelJS)
 
 ```
 GET /api/xuat/doanh-thu?format=excel&tu=...&den=...
@@ -1077,33 +1104,37 @@ GET /api/xuat/cong-suat?format=excel&tu=...&den=...
 
 - [ ] Shared helper `taoWorkbook(headers: string[], rows: any[][]): Workbook`
 
+### M12-FE: Print & Export Buttons
+- [ ] Add "Print PDF" button to: contract detail, invoice detail, settlement confirmation, cancellation confirmation
+- [ ] Add "Export Excel" button to each report section on the Statistics & Reports page
+
 ---
 
-## PHASE 9 — Non-Functional Requirements (NFR)
+## PHASE FINAL — Non-Functional Requirements
 
-### T9.1 MongoDB Indexes
+### NFR-1: MongoDB Indexes
 - [ ] `phong`: `{ khu_id, trang_thai }`
 - [ ] `hop_dong`: `{ khach_hang_id }`, `{ phong_id, trang_thai }`
 - [ ] `hoa_don`: unique `{ hop_dong_id, thang, nam }`, `{ trang_thai, han_thanh_toan }`
 - [ ] `khach_hang`: unique `{ cmnd }`
 
-### T9.2 Backup & Restore
+### NFR-2: Backup & Restore
 - [ ] `GET /api/backup` → run `mongodump`, compress via Archiver, stream `.tar.gz` to client
 - [ ] `POST /api/restore` → Multer receives `.tar.gz` file, run `mongorestore`
 
-### T9.3 General UX
+### NFR-3: General UX Polish
 - [ ] All search inputs use debounce + MongoDB regex
 - [ ] Second confirmation dialog for all important deletes (`Modal.confirm`)
 - [ ] Toast notifications for success / failure (`message` / `notification`)
 - [ ] Loading skeleton while fetching (TanStack Query `isLoading`)
 - [ ] React error boundary
 
-### T9.4 Logging (Winston + Morgan)
+### NFR-4: Logging
 - [ ] Morgan: log HTTP requests to console in dev, to file in production
 - [ ] Winston: `logs/error.log` (errors only) + `logs/combined.log` (all levels)
 - [ ] Centralized Express error handler: log → return `{ success: false, error }`
 
-### T9.5 Deployment
+### NFR-5: Deployment
 - [ ] `docker-compose.yml`: 3 services — `mongo` (persistent volume), `server`, `client` (nginx)
 - [ ] `ecosystem.config.js` for PM2: cluster mode, auto-restart on crash
 - [ ] `npm run build` for client → serve via nginx
