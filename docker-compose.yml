@@ -1,0 +1,37 @@
+version: '3.9'
+
+services:
+  mongo:
+    image: mongo:7
+    container_name: room_rental_mongo
+    restart: unless-stopped
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongo_data:/data/db
+
+  server:
+    build: ./server
+    container_name: room_rental_server
+    restart: unless-stopped
+    ports:
+      - '3001:3001'
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/room_rental
+      PORT: 3001
+      CLIENT_URL: http://localhost:80
+      NODE_ENV: production
+    depends_on:
+      - mongo
+
+  client:
+    build: ./client
+    container_name: room_rental_client
+    restart: unless-stopped
+    ports:
+      - '80:80'
+    depends_on:
+      - server
+
+volumes:
+  mongo_data:
