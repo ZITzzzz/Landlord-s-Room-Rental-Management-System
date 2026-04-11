@@ -1,9 +1,31 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import MainLayout from './components/layout/MainLayout';
 
-// Pages — loaded lazily per module as they're built
+// Module 1
 import KhuPage from './pages/khu/KhuPage';
 import LoaiPhongPage from './pages/loaiPhong/LoaiPhongPage';
+
+// Module 2
+import PhongPage from './pages/phong/PhongPage';
+
+// Module 3
+import KhachHangListPage from './pages/khachHang/KhachHangListPage';
+import KhachHangDetailPage from './pages/khachHang/KhachHangDetailPage';
+
+// Module 4
+import DatCocWizard from './pages/datCoc/DatCocWizard';
+
+// Module 5
+import HopDongListPage from './pages/hopDong/HopDongListPage';
+import HopDongDetailPage from './pages/hopDong/HopDongDetailPage';
+import HopDongWizard from './pages/hopDong/HopDongWizard';
+
+// Module 6
+import HoaDonListPage from './pages/hoaDon/HoaDonListPage';
+import LapHoaDonPage from './pages/hoaDon/LapHoaDonPage';
+
+// Module 7
+import ThanhLyPage from './pages/thanhLy/ThanhLyPage';
 
 // Placeholder for unbuilt pages
 const Placeholder = ({ title }) => (
@@ -25,23 +47,26 @@ export default function App() {
         <Route path="loai-phong" element={<LoaiPhongPage />} />
 
         {/* Module 2 */}
-        <Route path="phong" element={<Placeholder title="Phòng" />} />
-        <Route path="don-gia" element={<Placeholder title="Đơn giá dịch vụ" />} />
+        <Route path="phong" element={<PhongPage />} />
 
         {/* Module 3 */}
-        <Route path="khach-hang" element={<Placeholder title="Khách hàng" />} />
+        <Route path="khach-hang" element={<KhachHangListPage />} />
+        <Route path="khach-hang/:id" element={<KhachHangDetailPage />} />
 
         {/* Module 4 */}
-        <Route path="dat-coc" element={<Placeholder title="Đặt cọc" />} />
+        <Route path="dat-coc" element={<DatCocWizard />} />
 
         {/* Module 5 */}
-        <Route path="hop-dong" element={<Placeholder title="Hợp đồng" />} />
+        <Route path="hop-dong" element={<HopDongListPage />} />
+        <Route path="hop-dong/tao" element={<HopDongWizard />} />
+        <Route path="hop-dong/:id" element={<HopDongDetailPage />} />
 
         {/* Module 6 */}
-        <Route path="hoa-don" element={<Placeholder title="Hóa đơn" />} />
+        <Route path="hoa-don" element={<HoaDonListPage />} />
+        <Route path="hoa-don/lap" element={<LapHoaDonPage />} />
 
         {/* Module 7 */}
-        <Route path="thanh-ly" element={<Placeholder title="Thanh lý / Hủy hợp đồng" />} />
+        <Route path="thanh-ly" element={<ThanhLyPage />} />
 
         {/* Module 8 */}
         <Route path="sua-chua" element={<Placeholder title="Sửa chữa" />} />

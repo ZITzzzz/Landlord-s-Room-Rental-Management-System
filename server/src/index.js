@@ -21,6 +21,13 @@ app.use(express.json());
 // Routes (will be added per module)
 app.use('/api/khu', require('./routes/khu.routes'));
 app.use('/api/loai-phong', require('./routes/loaiPhong.routes'));
+app.use('/api/phong', require('./routes/phong.routes'));
+app.use('/api/don-gia', require('./routes/donGia.routes'));
+app.use('/api/khach-hang', require('./routes/khachHang.routes'));
+app.use('/api/dat-coc', require('./routes/datCoc.routes'));
+app.use('/api/hop-dong', require('./routes/hopDong.routes'));
+app.use('/api/nguoi-o', require('./routes/nguoiO.routes'));
+app.use('/api/hoa-don', require('./routes/hoaDon.routes'));
 
 // Health check
 app.get('/api/health', (req, res) => res.json({ success: true, data: 'OK' }));
