@@ -29,6 +29,10 @@ app.use('/api/hop-dong', require('./routes/hopDong.routes'));
 app.use('/api/nguoi-o', require('./routes/nguoiO.routes'));
 app.use('/api/hoa-don', require('./routes/hoaDon.routes'));
 
+app.use('/api/dashboard', require('./routes/dashboard.routes'));
+app.use('/api/thong-ke', require('./routes/thongKe.routes'));
+app.use('/api/bao-cao', require('./routes/baoCao.routes'));
+
 // Health check
 app.get('/api/health', (req, res) => res.json({ success: true, data: 'OK' }));
 

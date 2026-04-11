@@ -27,6 +27,10 @@ import LapHoaDonPage from './pages/hoaDon/LapHoaDonPage';
 // Module 7
 import ThanhLyPage from './pages/thanhLy/ThanhLyPage';
 
+// Module 10
+import DashboardPage from './pages/dashboard/DashboardPage';
+import BaoCaoPage from './pages/baoCao/BaoCaoPage';
+
 // Placeholder for unbuilt pages
 const Placeholder = ({ title }) => (
   <div style={{ padding: 24 }}>
@@ -40,7 +44,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<MainLayout />}>
         <Route index element={<Navigate to="/dashboard" replace />} />
-        <Route path="dashboard" element={<Placeholder title="Tổng quan" />} />
+        <Route path="dashboard" element={<DashboardPage />} />
 
         {/* Module 1 */}
         <Route path="khu" element={<KhuPage />} />
@@ -75,7 +79,7 @@ export default function App() {
         <Route path="chi-phi-van-hanh" element={<Placeholder title="Chi phí vận hành" />} />
 
         {/* Module 10 */}
-        <Route path="bao-cao" element={<Placeholder title="Thống kê & Báo cáo" />} />
+        <Route path="bao-cao" element={<BaoCaoPage />} />
       </Route>
     </Routes>
   );

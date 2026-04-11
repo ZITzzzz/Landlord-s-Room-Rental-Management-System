@@ -207,8 +207,52 @@ npm run dev
 # → server: http://localhost:3001
 ```
 
+## MODULE 10 — Dashboard & Thống kê / Báo cáo (COMPLETE)
+
+### Backend
+| File | Responsibility |
+|---|---|
+| `services/dashboard.service.js` | `getKPI` — doanh thu tháng hiện tại (từ `ngay_thanh_toan`), tỉ lệ lấp đầy theo khu, HĐ sắp hết hạn (30 ngày), phòng sửa chữa; `getCanhBao` — 5 loại cảnh báo lọc qua `CanhBaoDaXem` đã xem hôm nay; `markSeen(loai, id)` |
+| `services/thongKe.service.js` | `getThongKe({loai,tu,den})` — aggregate HoaDon (da_thanh_toan) + ChiPhiVanHanh theo tháng/quý/năm, trả về `{ky, doanh_thu, chi_phi, loi_nhuan}`; `getHoaDonKy(ky)` — drill-down DS hóa đơn của kỳ (parse "YYYY-MM", "YYYY-QN", "YYYY") |
+| `services/baoCao.service.js` | `getCongSuat({tu,den})` — tổng quát + theo khu + lịch sử tháng (đếm hop_dong_id distinct); `getNo()` — nợ theo KH, chi tiết theo phòng, đếm tháng nợ liên tiếp; `getDoanhThuTheoPhong({tu,den,khu_id})` |
+| `controllers/dashboard.controller.js` | 3 handlers |
+| `controllers/thongKe.controller.js` | 2 handlers |
+| `controllers/baoCao.controller.js` | 3 handlers |
+| `routes/dashboard.routes.js` | `GET /kpi`, `GET /canh-bao`, `PUT /canh-bao/:loai/:id/da-xem` |
+| `routes/thongKe.routes.js` | `GET /` (params: loai,tu,den), `GET /:ky/hoa-don` |
+| `routes/baoCao.routes.js` | `GET /cong-suat`, `GET /no`, `GET /doanh-thu-theo-phong` |
+
+### Frontend
+| File | Responsibility |
+|---|---|
+| `api/dashboard.api.js`, `hooks/useDashboard.js` | `useKPI`, `useCanhBao`, `useMarkSeen` (invalidates `['canhBao']`) |
+| `api/thongKe.api.js`, `hooks/useThongKe.js` | `useThongKe` (enabled khi có tu+den), `useHoaDonKy` |
+| `api/baoCao.api.js`, `hooks/useBaoCao.js` | `useCongSuat`, `useNo`, `useDoanhThuTheoPhong` |
+| `pages/dashboard/DashboardPage.jsx` | 4 KPI cards (Statistic); BarChart tỉ lệ lấp đầy màu xanh/vàng/đỏ theo ngưỡng; 5 nhóm cảnh báo với nút "Đã xem" (ghi CanhBaoDaXem, re-fetch canhBao) |
+| `pages/baoCao/BaoCaoPage.jsx` | **Tab Thống kê**: selector loại+khoảng tháng → BarChart 3 series (doanh thu/chi phí/lợi nhuận) + bảng + modal drill-down hóa đơn kỳ; **Tab Công suất**: 3 Statistic cards + bảng theo khu + LineChart xu hướng theo tháng; **Tab Nợ**: bảng expandable KH→chi tiết phòng+tháng nợ liên tiếp; **Tab Doanh thu theo phòng**: filter khu+khoảng tháng + horizontal BarChart top 15 + bảng |
+
+### Alert Filtering (CanhBaoDaXem)
+- Mỗi lần load `/api/dashboard/canh-bao`, query `CanhBaoDaXem` với `ngay_xem >= todayStart`
+- Build `Set` of `"loai:id"` strings → filter ra khỏi từng mảng kết quả
+- `PUT /canh-bao/:loai/:id/da-xem` insert record mới; FE invalidate `['canhBao']` → re-fetch
+
+### Period Aggregation (thongKe)
+- `tu`/`den` luôn là `"YYYY-MM"` strings từ FE
+- Server dùng `$expr` với `nam*12+thang` để filter range
+- Group theo tháng → bucket thành quý/năm trong JS (không dùng MongoDB `$ceil`)
+- `getHoaDonKy` parse ký tự: `"-Q"` → quý, `"-"` → tháng, otherwise → năm
+
+---
+
+## How to Run
+
+```bash
+npm run dev
+# → client: http://localhost:5173
+# → server: http://localhost:3001
+```
+
 ## Next Steps
 
 - **MODULE 8** — Repairs (`/sua-chua`); depends on M2 (rooms)
 - **MODULE 9** — Operating Costs (`/chi-phi-van-hanh`)
-- **MODULE 10** — Dashboard & Alerts + Statistics & Reports
