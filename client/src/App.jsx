@@ -27,17 +27,16 @@ import LapHoaDonPage from './pages/hoaDon/LapHoaDonPage';
 // Module 7
 import ThanhLyPage from './pages/thanhLy/ThanhLyPage';
 
+// Module 8
+import SuaChuaPage from './pages/suaChua/SuaChuaPage';
+
+// Module 9
+import ChiPhiPage from './pages/chiPhi/ChiPhiPage';
+
 // Module 10
 import DashboardPage from './pages/dashboard/DashboardPage';
 import BaoCaoPage from './pages/baoCao/BaoCaoPage';
 
-// Placeholder for unbuilt pages
-const Placeholder = ({ title }) => (
-  <div style={{ padding: 24 }}>
-    <h2>{title}</h2>
-    <p>Chức năng đang được phát triển.</p>
-  </div>
-);
 
 export default function App() {
   return (
@@ -73,10 +72,10 @@ export default function App() {
         <Route path="thanh-ly" element={<ThanhLyPage />} />
 
         {/* Module 8 */}
-        <Route path="sua-chua" element={<Placeholder title="Sửa chữa" />} />
+        <Route path="sua-chua" element={<SuaChuaPage />} />
 
         {/* Module 9 */}
-        <Route path="chi-phi-van-hanh" element={<Placeholder title="Chi phí vận hành" />} />
+        <Route path="chi-phi-van-hanh" element={<ChiPhiPage />} />
 
         {/* Module 10 */}
         <Route path="bao-cao" element={<BaoCaoPage />} />

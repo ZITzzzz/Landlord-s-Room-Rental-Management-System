@@ -21,6 +21,11 @@ const STATUS_MAP = {
     da_chuyen_hop_dong: ['green', 'Đã ký HĐ'],
     huy: ['red', 'Đã hủy'],
   },
+  sua_chua: {
+    cho_xu_ly: ['orange', 'Chờ xử lý'],
+    dang_xu_ly: ['blue', 'Đang xử lý'],
+    hoan_thanh: ['green', 'Hoàn thành'],
+  },
 };
 
 export default function StatusBadge({ status, type = 'phong' }) {
