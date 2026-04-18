@@ -4,10 +4,11 @@ import {
   Tabs, Button, Form, Input, InputNumber, DatePicker, Table, Space,
   Typography, Card, Descriptions, Skeleton, Empty, Alert, Select,
 } from 'antd';
-import { SearchOutlined } from '@ant-design/icons';
+import { SearchOutlined, FilePdfOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { useHopDongs, useThanhLy, useHuyHopDong } from '../../hooks/useHopDong';
 import StatusBadge from '../../components/StatusBadge';
+import { inThanhLy, inHuy } from '../../api/in.api';
 
 const { Title, Text } = Typography;
 const formatDate = (v) => (v ? dayjs(v).format('DD/MM/YYYY') : '—');
@@ -17,6 +18,7 @@ const formatVND = (v) => (v != null ? v.toLocaleString('vi-VN') + ' đ' : '—')
 function ThanhLyTab() {
   const [searchParams] = useSearchParams();
   const [selectedId, setSelectedId] = useState(searchParams.get('hop_dong_id') ?? null);
+  const [settledId, setSettledId] = useState(null);
   const [q, setQ] = useState('');
   const [result, setResult] = useState(null);
   const [form] = Form.useForm();
@@ -36,6 +38,7 @@ function ThanhLyTab() {
         tien_boi_thuong: values.tien_boi_thuong ?? 0,
       },
     });
+    setSettledId(selectedId);
     setResult(res);
     form.resetFields();
     setSelectedId(null);
@@ -84,9 +87,14 @@ function ThanhLyTab() {
             <Table rowKey="_id" dataSource={result.hoa_don_con_no} columns={noCols} pagination={false} size="small" />
           </Card>
         )}
-        <Button type="primary" style={{ marginTop: 16 }} onClick={() => setResult(null)}>
-          Thanh lý hợp đồng khác
-        </Button>
+        <Space style={{ marginTop: 16 }}>
+          {settledId && (
+            <Button icon={<FilePdfOutlined />} onClick={() => inThanhLy(settledId)}>In biên bản</Button>
+          )}
+          <Button type="primary" onClick={() => { setResult(null); setSettledId(null); }}>
+            Thanh lý hợp đồng khác
+          </Button>
+        </Space>
       </Card>
     );
   }
@@ -136,6 +144,7 @@ function ThanhLyTab() {
 // ─── Cancellation Tab ─────────────────────────────────────────────────────────
 function HuyHopDongTab() {
   const [selectedId, setSelectedId] = useState(null);
+  const [cancelledId, setCancelledId] = useState(null);
   const [q, setQ] = useState('');
   const [result, setResult] = useState(null);
   const [form] = Form.useForm();
@@ -149,6 +158,7 @@ function HuyHopDongTab() {
     const values = await form.validateFields();
     try {
       const res = await huyMutation.mutateAsync({ id: selectedId, data: { ly_do_huy: values.ly_do_huy } });
+      setCancelledId(selectedId);
       setResult(res);
       form.resetFields();
       setSelectedId(null);
@@ -186,9 +196,14 @@ function HuyHopDongTab() {
             <Table rowKey="_id" dataSource={result.hoa_don_khong_thanh_toan} columns={noCols} pagination={false} size="small" />
           </Card>
         )}
-        <Button type="primary" style={{ marginTop: 16 }} onClick={() => setResult(null)}>
-          Hủy hợp đồng khác
-        </Button>
+        <Space style={{ marginTop: 16 }}>
+          {cancelledId && (
+            <Button icon={<FilePdfOutlined />} onClick={() => inHuy(cancelledId)}>In biên bản</Button>
+          )}
+          <Button type="primary" onClick={() => { setResult(null); setCancelledId(null); }}>
+            Hủy hợp đồng khác
+          </Button>
+        </Space>
       </Card>
     );
   }

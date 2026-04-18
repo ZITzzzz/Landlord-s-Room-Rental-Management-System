@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import {
   Button, Table, Space, Typography, Select, Modal, Form, Skeleton, Descriptions, Tag,
 } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { PlusOutlined, FilePdfOutlined } from '@ant-design/icons';
+import { inHoaDon } from '../../api/in.api';
 import dayjs from 'dayjs';
 import { useHoaDons, useThanhToan } from '../../hooks/useHoaDon';
 import StatusBadge from '../../components/StatusBadge';
@@ -90,12 +91,16 @@ export default function HoaDonListPage() {
     {
       title: 'Thao tác',
       key: 'action',
-      render: (_, record) =>
-        record.trang_thai === 'chua_thanh_toan' ? (
-          <Button size="small" type="primary" onClick={() => setThanhToanTarget(record)}>Thanh toán</Button>
-        ) : (
-          <Text type="secondary" style={{ fontSize: 12 }}>{formatDate(record.ngay_thanh_toan)}</Text>
-        ),
+      render: (_, record) => (
+        <Space size="small">
+          {record.trang_thai === 'chua_thanh_toan' ? (
+            <Button size="small" type="primary" onClick={() => setThanhToanTarget(record)}>Thanh toán</Button>
+          ) : (
+            <Text type="secondary" style={{ fontSize: 12 }}>{formatDate(record.ngay_thanh_toan)}</Text>
+          )}
+          <Button size="small" icon={<FilePdfOutlined />} onClick={() => inHoaDon(record._id)} />
+        </Space>
+      ),
     },
   ];
 

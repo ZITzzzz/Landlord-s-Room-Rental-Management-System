@@ -36,6 +36,10 @@ app.use('/api/dashboard', require('./routes/dashboard.routes'));
 app.use('/api/thong-ke', require('./routes/thongKe.routes'));
 app.use('/api/bao-cao', require('./routes/baoCao.routes'));
 
+app.use('/api/in', require('./routes/in.routes'));
+app.use('/api/xuat', require('./routes/xuat.routes'));
+app.use('/api/backup', require('./routes/backup.routes'));
+
 // Health check
 app.get('/api/health', (req, res) => res.json({ success: true, data: 'OK' }));
 

@@ -4,10 +4,11 @@ import {
   Button, Card, Descriptions, Table, Space, Typography, Skeleton, Modal,
   Form, Input, DatePicker, Tag, Empty, Tabs, Popconfirm,
 } from 'antd';
-import { ArrowLeftOutlined, PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, PlusOutlined, EditOutlined, DeleteOutlined, FilePdfOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { useHopDongById, useGiaHanHopDong, useAddNguoiO, useUpdateNguoiO, useDeleteNguoiO } from '../../hooks/useHopDong';
 import StatusBadge from '../../components/StatusBadge';
+import { inHopDong } from '../../api/in.api';
 
 const { Title, Text } = Typography;
 const formatDate = (v) => (v ? dayjs(v).format('DD/MM/YYYY') : '—');
@@ -158,12 +159,15 @@ export default function HopDongDetailPage() {
       <Card
         title={<Title level={4} style={{ margin: 0 }}>Hợp đồng — {hd.ten_phong} ({hd.ten_khu})</Title>}
         extra={
-          isActive && (
-            <Space>
-              <Button onClick={() => { giaHanForm.resetFields(); setGiaHanOpen(true); }}>Gia hạn</Button>
-              <Button danger onClick={() => navigate(`/thanh-ly?hop_dong_id=${id}`)}>Thanh lý / Hủy</Button>
-            </Space>
-          )
+          <Space>
+            <Button icon={<FilePdfOutlined />} onClick={() => inHopDong(id)}>In PDF</Button>
+            {isActive && (
+              <>
+                <Button onClick={() => { giaHanForm.resetFields(); setGiaHanOpen(true); }}>Gia hạn</Button>
+                <Button danger onClick={() => navigate(`/thanh-ly?hop_dong_id=${id}`)}>Thanh lý / Hủy</Button>
+              </>
+            )}
+          </Space>
         }
         style={{ marginBottom: 24 }}
       >

@@ -9,9 +9,11 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend,
   LineChart, Line, CartesianGrid,
 } from 'recharts';
+import { FileExcelOutlined } from '@ant-design/icons';
 import { useThongKe, useHoaDonKy } from '../../hooks/useThongKe';
 import { useCongSuat, useNo, useDoanhThuTheoPhong } from '../../hooks/useBaoCao';
 import { useKhus } from '../../hooks/useKhu';
+import { xuatDoanhThu, xuatNo, xuatCongSuat, xuatDoanhThuTheoPhong } from '../../api/in.api';
 
 const { Title, Text } = Typography;
 const formatVND = (v) => (v != null ? v.toLocaleString('vi-VN') + ' đ' : '—');
@@ -123,6 +125,9 @@ function ThongKeTab() {
         <Empty description="Không có dữ liệu" />
       ) : (
         <>
+          <Button icon={<FileExcelOutlined />} onClick={() => xuatDoanhThu(params)} style={{ alignSelf: 'flex-start' }}>
+            Xuất Excel
+          </Button>
           <Card size="small">
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={rows} barSize={30}>
@@ -228,6 +233,9 @@ function CongSuatTab() {
         <Skeleton active paragraph={{ rows: 5 }} />
       ) : !data ? null : (
         <>
+          <Button icon={<FileExcelOutlined />} onClick={() => xuatCongSuat(params)} style={{ alignSelf: 'flex-start' }}>
+            Xuất Excel
+          </Button>
           <Row gutter={16}>
             <Col span={8}>
               <Card>
@@ -326,6 +334,10 @@ function NoTab() {
   ) : data.length === 0 ? (
     <Empty description="Không có khách hàng nào đang nợ" />
   ) : (
+    <Space direction="vertical" style={{ width: '100%' }}>
+      <Button icon={<FileExcelOutlined />} onClick={() => xuatNo()} style={{ alignSelf: 'flex-start' }}>
+        Xuất Excel
+      </Button>
     <Table
       rowKey="khach_hang_id"
       dataSource={data}
@@ -345,6 +357,7 @@ function NoTab() {
         ),
       }}
     />
+    </Space>
   );
 }
 
@@ -396,6 +409,9 @@ function DoanhThuTheoPhongTab() {
         <Empty description="Không có dữ liệu trong khoảng thời gian này" />
       ) : (
         <>
+          <Button icon={<FileExcelOutlined />} onClick={() => xuatDoanhThuTheoPhong(params)} style={{ alignSelf: 'flex-start' }}>
+            Xuất Excel
+          </Button>
           <Card size="small">
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={data.slice(0, 15)} barSize={30} layout="vertical">
