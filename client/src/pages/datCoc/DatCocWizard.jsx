@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Steps, Button, Form, Input, InputNumber, DatePicker, Table, Space,
-  Typography, Card, Descriptions, Skeleton, Divider, Row, Col,
+  Typography, Card, Descriptions, Skeleton, Divider, Row, Col, message,
 } from 'antd';
 import { SearchOutlined, UserAddOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
@@ -231,6 +231,8 @@ export default function DatCocWizard() {
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedPhong, setSelectedPhong] = useState(null);
   const [selectedKhachHang, setSelectedKhachHang] = useState(null);
+  // Lưu giá trị form vào state khi chuyển từ bước 1 → 2 để tránh mất dữ liệu khi Form.Item unmount
+  const [confirmedValues, setConfirmedValues] = useState(null);
   const [form] = Form.useForm();
   const createDatCocMutation = useCreateDatCoc();
 
@@ -239,25 +241,35 @@ export default function DatCocWizard() {
       if (!selectedPhong) return;
       setCurrentStep(1);
     } else if (currentStep === 1) {
-      await form.validateFields(['so_tien', 'ngay_dat_coc']);
       if (!selectedKhachHang) {
+        message.warning('Vui lòng chọn khách hàng');
         return;
       }
-      setCurrentStep(2);
+      try {
+        const values = await form.validateFields(['so_tien', 'ngay_dat_coc']);
+        setConfirmedValues(values);
+        setCurrentStep(2);
+      } catch {
+        // form.validateFields tự hiển thị lỗi trên từng field
+      }
     }
   };
 
   const goPrev = () => setCurrentStep((s) => s - 1);
 
   const handleConfirm = async () => {
-    const values = form.getFieldsValue();
-    await createDatCocMutation.mutateAsync({
-      phong_id: selectedPhong._id,
-      khach_hang_id: selectedKhachHang._id,
-      so_tien: values.so_tien,
-      ngay_dat_coc: values.ngay_dat_coc.toISOString(),
-    });
-    navigate('/phong');
+    try {
+      await createDatCocMutation.mutateAsync({
+        phong_id: selectedPhong._id,
+        khach_hang_id: selectedKhachHang._id,
+        so_tien: confirmedValues.so_tien,
+        ngay_dat_coc: confirmedValues.ngay_dat_coc.toISOString(),
+      });
+      message.success('Đặt cọc thành công!');
+      navigate('/phong');
+    } catch {
+      // axiosInstance đã hiển thị toast lỗi từ API
+    }
   };
 
   const steps = [
@@ -279,8 +291,8 @@ export default function DatCocWizard() {
       key="2"
       phong={selectedPhong}
       khachHang={selectedKhachHang}
-      soTien={form.getFieldValue('so_tien')}
-      ngayDatCoc={form.getFieldValue('ngay_dat_coc')}
+      soTien={confirmedValues?.so_tien}
+      ngayDatCoc={confirmedValues?.ngay_dat_coc}
     />,
   ];
 

@@ -10,7 +10,6 @@ export const useCreateDatCoc = () => {
       qc.invalidateQueries({ queryKey: ['phongs'] });
       qc.invalidateQueries({ queryKey: ['phongsTrong'] });
       qc.invalidateQueries({ queryKey: ['khachHang', variables.khach_hang_id] });
-      message.success('Đặt cọc thành công');
     },
   });
 };
