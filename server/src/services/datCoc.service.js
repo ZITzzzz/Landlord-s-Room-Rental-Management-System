@@ -1,6 +1,18 @@
 const DatCoc = require('../models/DatCoc');
 const Phong = require('../models/Phong');
 
+const getAll = async ({ trang_thai } = {}) => {
+  const filter = {};
+  if (trang_thai) filter.trang_thai = trang_thai;
+
+  return DatCoc.find(filter)
+    .sort({ ngay_dat_coc: -1 })
+    .populate('phong_id', 'ten khu_id')
+    .populate({ path: 'phong_id', populate: { path: 'khu_id', select: 'ten' } })
+    .populate('khach_hang_id', 'ho_ten so_dien_thoai')
+    .lean();
+};
+
 const create = async (data) => {
   const phong = await Phong.findById(data.phong_id);
   if (!phong) throw Object.assign(new Error('Không tìm thấy phòng'), { status: 404 });
@@ -37,4 +49,4 @@ const getActiveByPhong = async (phong_id) => {
   return datCoc;
 };
 
-module.exports = { create, huy, getActiveByPhong };
+module.exports = { getAll, create, huy, getActiveByPhong };

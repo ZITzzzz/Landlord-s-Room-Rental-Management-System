@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Button, Form, Input, Modal, Table, Space, Skeleton, DatePicker, Tag,
+  Button, Form, Input, Modal, Table, Space, Skeleton, DatePicker, Tag, Empty,
 } from 'antd';
 import { PlusOutlined, EditOutlined, SearchOutlined } from '@ant-design/icons';
 import PageHeader from '../../components/PageHeader';
@@ -125,6 +125,7 @@ export default function KhachHangListPage() {
           size="middle"
           onRow={(record) => ({ onClick: () => navigate(`/khach-hang/${record._id}`) })}
           rowClassName={() => 'cursor-pointer'}
+          locale={{ emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Không có khách hàng nào" /> }}
         />
       )}
 

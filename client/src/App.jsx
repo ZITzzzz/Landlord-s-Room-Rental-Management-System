@@ -13,6 +13,7 @@ import KhachHangListPage from './pages/khachHang/KhachHangListPage';
 import KhachHangDetailPage from './pages/khachHang/KhachHangDetailPage';
 
 // Module 4
+import DatCocListPage from './pages/datCoc/DatCocListPage';
 import DatCocWizard from './pages/datCoc/DatCocWizard';
 
 // Module 5
@@ -56,8 +57,9 @@ export default function App() {
         <Route path="khach-hang" element={<KhachHangListPage />} />
         <Route path="khach-hang/:id" element={<KhachHangDetailPage />} />
 
-        {/* Module 4 */}
-        <Route path="dat-coc" element={<DatCocWizard />} />
+        {/* Module 4 — /dat-coc/tao before /dat-coc to avoid :id match */}
+        <Route path="dat-coc/tao" element={<DatCocWizard />} />
+        <Route path="dat-coc" element={<DatCocListPage />} />
 
         {/* Module 5 */}
         <Route path="hop-dong" element={<HopDongListPage />} />

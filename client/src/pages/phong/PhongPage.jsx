@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   Button, Form, Input, InputNumber, Modal, Table, Space,
-  Skeleton, Select, Drawer,
+  Skeleton, Select, Drawer, Empty,
 } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, HistoryOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
@@ -187,6 +187,7 @@ export default function PhongPage() {
         pagination={{ pageSize: 10 }}
         bordered
         size="middle"
+        locale={{ emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Không có phòng nào" /> }}
       />
 
       {/* Add / Edit Modal */}

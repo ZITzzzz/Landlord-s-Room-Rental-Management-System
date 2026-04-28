@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, Table, Space, Select, DatePicker, Input, Skeleton } from 'antd';
+import { Button, Table, Space, Select, DatePicker, Input, Skeleton, Empty } from 'antd';
 import { PlusOutlined, SearchOutlined } from '@ant-design/icons';
 import PageHeader from '../../components/PageHeader';
 import dayjs from 'dayjs';
@@ -91,6 +91,7 @@ export default function HopDongListPage() {
           rowKey="_id" dataSource={hopDongs} columns={columns}
           pagination={{ pageSize: 10 }} bordered size="middle"
           onRow={(r) => ({ onClick: () => navigate(`/hop-dong/${r._id}`) })}
+          locale={{ emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Không có hợp đồng nào" /> }}
         />
       )}
     </>

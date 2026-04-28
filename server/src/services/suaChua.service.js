@@ -39,12 +39,13 @@ const update = async (id, data) => {
   const suaChua = await SuaChua.findById(id);
   if (!suaChua) throw Object.assign(new Error('Không tìm thấy yêu cầu sửa chữa'), { status: 404 });
 
-  // When marking complete, transition room back to 'trong'
+  // When marking complete, transition room back to 'trong' and record completion date
   if (data.trang_thai === 'hoan_thanh' && suaChua.trang_thai !== 'hoan_thanh') {
     const phong = await Phong.findById(suaChua.phong_id);
     if (phong && phong.trang_thai === 'sua_chua') {
       await Phong.findByIdAndUpdate(suaChua.phong_id, { trang_thai: 'trong' });
     }
+    data.ngay_hoan_thanh = new Date();
   }
 
   const updated = await SuaChua.findByIdAndUpdate(id, data, { new: true, runValidators: true });

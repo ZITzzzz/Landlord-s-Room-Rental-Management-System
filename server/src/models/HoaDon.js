@@ -30,6 +30,7 @@ const HoaDonSchema = new mongoose.Schema(
     ngay_thanh_toan: { type: Date },
     phuong_thuc: { type: String, enum: ['tien_mat', 'chuyen_khoan'] },
     ma_giao_dich: { type: String },
+    ghi_chu: { type: String, default: '' },
   },
   { collection: 'hoa_don' }
 );

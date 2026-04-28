@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Button, Table, Space, Select, Modal, Form, Skeleton, Descriptions, Tag, Typography,
+  Button, Table, Space, Select, Modal, Form, Skeleton, Descriptions, Tag, Typography, Empty,
 } from 'antd';
 import { PlusOutlined, FilePdfOutlined } from '@ant-design/icons';
 import PageHeader from '../../components/PageHeader';
@@ -64,6 +64,9 @@ function ThanhToanModal({ hoaDon, onClose }) {
                     : null
                 }
               </Form.Item>
+            </Form.Item>
+            <Form.Item name="ghi_chu" label="Ghi chú (tùy chọn)">
+              <input placeholder="VD: Giảm 50k do sửa chữa phòng tắm" style={{ width: '100%', padding: '4px 8px', border: '1px solid #d9d9d9', borderRadius: 6 }} />
             </Form.Item>
           </Form>
         </>
@@ -133,7 +136,11 @@ export default function HoaDonListPage() {
       {isLoading ? (
         <Skeleton active paragraph={{ rows: 8 }} />
       ) : (
-        <Table rowKey="_id" dataSource={hoaDons} columns={columns} pagination={{ pageSize: 10 }} bordered size="middle" />
+        <Table
+          rowKey="_id" dataSource={hoaDons} columns={columns}
+          pagination={{ pageSize: 10 }} bordered size="middle"
+          locale={{ emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Không có hóa đơn nào" /> }}
+        />
       )}
 
       <ThanhToanModal hoaDon={thanhToanTarget} onClose={() => setThanhToanTarget(null)} />

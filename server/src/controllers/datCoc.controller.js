@@ -1,5 +1,14 @@
 const service = require('../services/datCoc.service');
 
+const getAll = async (req, res, next) => {
+  try {
+    const data = await service.getAll(req.query);
+    res.json({ success: true, data });
+  } catch (err) {
+    next(err);
+  }
+};
+
 const create = async (req, res, next) => {
   try {
     const data = await service.create(req.body);
@@ -27,4 +36,4 @@ const getActiveByPhong = async (req, res, next) => {
   }
 };
 
-module.exports = { create, huy, getActiveByPhong };
+module.exports = { getAll, create, huy, getActiveByPhong };

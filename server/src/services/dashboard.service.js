@@ -138,7 +138,24 @@ const getCanhBao = async () => {
     }
   }
 
-  // 5. Contracts expiring within 30 days
+  // 5. Contracts already expired (past ngay_het_han, still hieu_luc)
+  const hdDaHetHan = await HopDong.find({
+    trang_thai: 'hieu_luc',
+    ngay_het_han: { $lt: now },
+  })
+    .populate('phong_id', 'ten')
+    .populate('khach_hang_id', 'ho_ten')
+    .lean();
+  const hd_da_het_han = hdDaHetHan
+    .filter((hd) => notSeen('hd_da_het_han', hd._id))
+    .map((hd) => ({
+      hop_dong_id: hd._id,
+      ten_phong: hd.phong_id?.ten,
+      ten_khach_hang: hd.khach_hang_id?.ho_ten,
+      ngay_het_han: hd.ngay_het_han,
+    }));
+
+  // 6. Contracts expiring within 30 days
   const hdSapHet = await HopDong.find({
     trang_thai: 'hieu_luc',
     ngay_het_han: { $gte: now, $lte: in30Days },
@@ -155,7 +172,7 @@ const getCanhBao = async () => {
       ngay_het_han: hd.ngay_het_han,
     }));
 
-  return { phong_chua_hd, hd_sap_den_han, hd_qua_han, nguy_co_huy, hop_dong_sap_het };
+  return { phong_chua_hd, hd_sap_den_han, hd_qua_han, nguy_co_huy, hd_da_het_han, hop_dong_sap_het };
 };
 
 const markSeen = async (loai, id) => {

@@ -4,6 +4,7 @@ const ctrl = require('../controllers/datCoc.controller');
 const validate = require('../middlewares/validate');
 const { datCocCreateSchema, datCocHuySchema } = require('../../../shared/schemas/datCoc.schema');
 
+router.get('/', ctrl.getAll);
 // NOTE: /phong/:phong_id must come before /:id
 router.get('/phong/:phong_id', ctrl.getActiveByPhong);
 router.post('/', validate(datCocCreateSchema), ctrl.create);

@@ -5,6 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 const multer = require('multer');
+const adminKey = require('../middlewares/adminKey');
 
 const upload = multer({ dest: os.tmpdir() });
 
@@ -25,7 +26,7 @@ const parseMongoURI = (uri) => {
 };
 
 // GET /api/backup — dump MongoDB and stream as tar.gz
-router.get('/', (req, res, next) => {
+router.get('/', adminKey, (req, res, next) => {
   const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/room_rental';
   const { host, port, db, username, password } = parseMongoURI(uri);
   const dumpDir = path.join(os.tmpdir(), `dump_${Date.now()}`);
@@ -62,7 +63,7 @@ router.get('/', (req, res, next) => {
 });
 
 // POST /api/restore — receive tar.gz, run mongorestore
-router.post('/', upload.single('backup'), (req, res, next) => {
+router.post('/', adminKey, upload.single('backup'), (req, res, next) => {
   if (!req.file) {
     return res.status(400).json({ success: false, error: 'Vui lòng upload file backup (.tar.gz)' });
   }

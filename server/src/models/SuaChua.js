@@ -13,6 +13,7 @@ const SuaChuaSchema = new mongoose.Schema(
       default: 'cho_xu_ly',
     },
     do_kh_gay_ra: { type: Boolean, default: false },
+    ngay_hoan_thanh: { type: Date, default: null },
   },
   { collection: 'sua_chua' }
 );

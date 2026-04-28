@@ -136,6 +136,7 @@ function AlertsSection() {
     (data.hd_sap_den_han?.length || 0) +
     (data.hd_qua_han?.length || 0) +
     (data.nguy_co_huy?.length || 0) +
+    (data.hd_da_het_han?.length || 0) +
     (data.hop_dong_sap_het?.length || 0);
 
   return (
@@ -262,6 +263,37 @@ function AlertsSection() {
                     onClick={() => navigate(`/thanh-ly`)}
                   >
                     Xử lý
+                  </Button>
+                </Space>
+              </AlertItem>
+            )}
+          />
+          <Divider style={{ margin: '12px 0' }} />
+        </>
+      )}
+
+      {data.hd_da_het_han?.length > 0 && (
+        <>
+          <Title level={5}>
+            <Tag color="red">Hợp đồng đã hết hạn — cần gia hạn ngay</Tag>
+            ({data.hd_da_het_han.length})
+          </Title>
+          <List
+            size="small"
+            dataSource={data.hd_da_het_han}
+            renderItem={(item) => (
+              <AlertItem item={item} loai="hd_da_het_han" idField="hop_dong_id">
+                <Space wrap>
+                  <Text>
+                    <strong>{item.ten_phong}</strong> — {item.ten_khach_hang}
+                  </Text>
+                  <Tag color="red">Hết hạn: {formatDate(item.ngay_het_han)}</Tag>
+                  <Button
+                    type="link"
+                    size="small"
+                    onClick={() => navigate(`/hop-dong/${item.hop_dong_id}`)}
+                  >
+                    Gia hạn
                   </Button>
                 </Space>
               </AlertItem>

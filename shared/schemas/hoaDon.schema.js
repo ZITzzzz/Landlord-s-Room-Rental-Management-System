@@ -15,6 +15,7 @@ const thanhToanSchema = z.object({
     errorMap: () => ({ message: 'Phương thức thanh toán không hợp lệ' }),
   }),
   ma_giao_dich: z.string().optional(),
+  ghi_chu: z.string().optional(),
 });
 
 module.exports = { hoaDonCreateSchema, thanhToanSchema };

@@ -220,6 +220,12 @@ export default function SuaChuaPage() {
       render: (v) => (v ? 'Có' : 'Không'),
     },
     {
+      title: 'Ngày HT',
+      dataIndex: 'ngay_hoan_thanh',
+      key: 'ngay_hoan_thanh',
+      render: (v) => (v ? dayjs(v).format('DD/MM/YYYY') : '—'),
+    },
+    {
       title: 'Thao tác',
       key: 'action',
       align: 'center',

@@ -60,8 +60,11 @@ const tinhHoaDon = async (hopDong, phong, thang, nam, chi_so_dien_moi, chi_so_nu
     getDonGiaHieuLuc(null, 'xe_dap', ngayLap),
   ]);
 
-  const don_gia_dien = dgDien?.don_gia ?? 0;
-  const don_gia_nuoc = dgNuoc?.don_gia ?? 0;
+  if (!dgDien) throw Object.assign(new Error('Chưa thiết lập đơn giá điện cho loại phòng này. Vui lòng vào Quản lý loại phòng để cập nhật.'), { status: 400 });
+  if (!dgNuoc) throw Object.assign(new Error('Chưa thiết lập đơn giá nước cho loại phòng này. Vui lòng vào Quản lý loại phòng để cập nhật.'), { status: 400 });
+
+  const don_gia_dien = dgDien.don_gia;
+  const don_gia_nuoc = dgNuoc.don_gia;
   const don_gia_ve_sinh = dgVeSinh?.don_gia ?? 0;
   const don_gia_xe_may = dgXeMay?.don_gia ?? 0;
   const don_gia_xe_dap = dgXeDap?.don_gia ?? 0;
