@@ -14,8 +14,9 @@ import { useThongKe, useHoaDonKy } from '../../hooks/useThongKe';
 import { useCongSuat, useNo, useDoanhThuTheoPhong } from '../../hooks/useBaoCao';
 import { useKhus } from '../../hooks/useKhu';
 import { xuatDoanhThu, xuatNo, xuatCongSuat, xuatDoanhThuTheoPhong } from '../../api/in.api';
+import PageHeader from '../../components/PageHeader';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 const formatVND = (v) => (v != null ? v.toLocaleString('vi-VN') + ' đ' : '—');
 const formatDate = (v) => (v ? dayjs(v).format('DD/MM/YYYY') : '—');
 
@@ -448,7 +449,7 @@ export default function BaoCaoPage() {
 
   return (
     <>
-      <Title level={4} style={{ marginBottom: 16 }}>Thống kê & Báo cáo</Title>
+      <PageHeader title="Thống kê & Báo cáo" />
       <Tabs defaultActiveKey="thong-ke" items={tabItems} />
     </>
   );

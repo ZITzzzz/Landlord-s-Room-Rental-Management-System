@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  Button, Form, Input, InputNumber, Modal, Table, Space, Typography,
+  Button, Form, Input, InputNumber, Modal, Table, Space,
   Skeleton, Select, Drawer,
 } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, HistoryOutlined } from '@ant-design/icons';
@@ -11,8 +11,7 @@ import { useLoaiPhongs } from '../../hooks/useLoaiPhong';
 import ConfirmDeleteModal from '../../components/ConfirmDeleteModal';
 import StatusBadge from '../../components/StatusBadge';
 import HuyDatCocModal from '../../components/HuyDatCocModal';
-
-const { Title } = Typography;
+import PageHeader from '../../components/PageHeader';
 
 const formatVND = (v) => (v != null ? v.toLocaleString('vi-VN') + ' đ' : '—');
 
@@ -153,12 +152,10 @@ export default function PhongPage() {
 
   return (
     <>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <Title level={4} style={{ margin: 0 }}>Quản lý phòng</Title>
-        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
-          Thêm phòng
-        </Button>
-      </div>
+      <PageHeader
+        title="Quản lý phòng"
+        extra={<Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>Thêm phòng</Button>}
+      />
 
       {/* Filter bar */}
       <Space style={{ marginBottom: 16 }} wrap>

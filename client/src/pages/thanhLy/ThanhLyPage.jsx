@@ -9,8 +9,9 @@ import dayjs from 'dayjs';
 import { useHopDongs, useThanhLy, useHuyHopDong } from '../../hooks/useHopDong';
 import StatusBadge from '../../components/StatusBadge';
 import { inThanhLy, inHuy } from '../../api/in.api';
+import PageHeader from '../../components/PageHeader';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 const formatDate = (v) => (v ? dayjs(v).format('DD/MM/YYYY') : '—');
 const formatVND = (v) => (v != null ? v.toLocaleString('vi-VN') + ' đ' : '—');
 
@@ -249,7 +250,7 @@ export default function ThanhLyPage() {
 
   return (
     <>
-      <Title level={4} style={{ marginBottom: 16 }}>Thanh lý & Hủy hợp đồng</Title>
+      <PageHeader title="Thanh lý & Hủy hợp đồng" />
       <Tabs defaultActiveKey={defaultTab} items={tabItems} />
     </>
   );

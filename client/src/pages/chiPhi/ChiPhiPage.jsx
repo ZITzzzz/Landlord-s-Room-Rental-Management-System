@@ -1,14 +1,13 @@
 import { useState } from 'react';
 import {
-  Button, Form, Input, InputNumber, Modal, Table, Space, Typography,
+  Button, Form, Input, InputNumber, Modal, Table, Space,
   Select, Skeleton,
 } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useKhus } from '../../hooks/useKhu';
 import { useChiPhis, useCreateChiPhi, useUpdateChiPhi, useDeleteChiPhi } from '../../hooks/useChiPhi';
 import ConfirmDeleteModal from '../../components/ConfirmDeleteModal';
-
-const { Title } = Typography;
+import PageHeader from '../../components/PageHeader';
 
 const formatVND = (v) => (v != null ? v.toLocaleString('vi-VN') + ' đ' : '—');
 
@@ -210,12 +209,10 @@ export default function ChiPhiPage() {
 
   return (
     <>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <Title level={4} style={{ margin: 0 }}>Chi phí vận hành</Title>
-        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
-          Thêm chi phí
-        </Button>
-      </div>
+      <PageHeader
+        title="Chi phí vận hành"
+        extra={<Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>Thêm chi phí</Button>}
+      />
 
       {/* Filters */}
       <Space style={{ marginBottom: 16 }} wrap>

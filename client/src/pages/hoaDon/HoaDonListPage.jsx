@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Button, Table, Space, Typography, Select, Modal, Form, Skeleton, Descriptions, Tag,
+  Button, Table, Space, Select, Modal, Form, Skeleton, Descriptions, Tag, Typography,
 } from 'antd';
 import { PlusOutlined, FilePdfOutlined } from '@ant-design/icons';
+import PageHeader from '../../components/PageHeader';
 import { inHoaDon } from '../../api/in.api';
 import dayjs from 'dayjs';
 import { useHoaDons, useThanhToan } from '../../hooks/useHoaDon';
@@ -106,12 +107,10 @@ export default function HoaDonListPage() {
 
   return (
     <>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <Title level={4} style={{ margin: 0 }}>Quản lý hóa đơn</Title>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/hoa-don/lap')}>
-          Lập hóa đơn
-        </Button>
-      </div>
+      <PageHeader
+        title="Quản lý hóa đơn"
+        extra={<Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/hoa-don/lap')}>Lập hóa đơn</Button>}
+      />
 
       <Space style={{ marginBottom: 16 }} wrap>
         <Select

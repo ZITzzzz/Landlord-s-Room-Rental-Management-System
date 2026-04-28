@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, Table, Space, Typography, Select, DatePicker, Input, Skeleton } from 'antd';
+import { Button, Table, Space, Select, DatePicker, Input, Skeleton } from 'antd';
 import { PlusOutlined, SearchOutlined } from '@ant-design/icons';
+import PageHeader from '../../components/PageHeader';
 import dayjs from 'dayjs';
 import { useHopDongs } from '../../hooks/useHopDong';
 import { useKhus } from '../../hooks/useKhu';
 import StatusBadge from '../../components/StatusBadge';
 
-const { Title } = Typography;
 const { RangePicker } = DatePicker;
 
 const formatDate = (v) => (v ? dayjs(v).format('DD/MM/YYYY') : '—');
@@ -45,12 +45,10 @@ export default function HopDongListPage() {
 
   return (
     <>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <Title level={4} style={{ margin: 0 }}>Quản lý hợp đồng</Title>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/hop-dong/tao')}>
-          Ký hợp đồng mới
-        </Button>
-      </div>
+      <PageHeader
+        title="Quản lý hợp đồng"
+        extra={<Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/hop-dong/tao')}>Ký hợp đồng mới</Button>}
+      />
 
       <Space style={{ marginBottom: 16 }} wrap>
         <Select

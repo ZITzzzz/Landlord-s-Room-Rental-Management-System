@@ -4,6 +4,7 @@ import {
   Skeleton, Tag, Select, DatePicker, Card, Divider,
 } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import PageHeader from '../../components/PageHeader';
 import dayjs from 'dayjs';
 import { useLoaiPhongs, useCreateLoaiPhong, useUpdateLoaiPhong, useDeleteLoaiPhong } from '../../hooks/useLoaiPhong';
 import { useDonGiaCurrent, useCreateDonGia } from '../../hooks/useDonGia';
@@ -207,12 +208,10 @@ export default function LoaiPhongPage() {
 
   return (
     <>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <Title level={4} style={{ margin: 0 }}>Quản lý loại phòng</Title>
-        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
-          Thêm loại phòng
-        </Button>
-      </div>
+      <PageHeader
+        title="Quản lý loại phòng"
+        extra={<Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>Thêm loại phòng</Button>}
+      />
 
       <Table
         rowKey="_id"

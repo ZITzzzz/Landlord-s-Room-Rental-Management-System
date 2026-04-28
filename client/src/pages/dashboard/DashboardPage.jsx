@@ -12,6 +12,7 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
 } from 'recharts';
 import { useKPI, useCanhBao, useMarkSeen } from '../../hooks/useDashboard';
+import PageHeader from '../../components/PageHeader';
 
 const { Title, Text } = Typography;
 const formatVND = (v) => (v != null ? v.toLocaleString('vi-VN') + ' đ' : '—');
@@ -307,7 +308,7 @@ function AlertsSection() {
 export default function DashboardPage() {
   return (
     <>
-      <Title level={4} style={{ marginBottom: 16 }}>Tổng quan</Title>
+      <PageHeader title="Tổng quan" />
       <KPISection />
       <AlertsSection />
     </>

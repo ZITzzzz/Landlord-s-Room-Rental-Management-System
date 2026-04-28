@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Button, Form, Input, Modal, Table, Space, Typography, Skeleton, DatePicker, Tag,
+  Button, Form, Input, Modal, Table, Space, Skeleton, DatePicker, Tag,
 } from 'antd';
 import { PlusOutlined, EditOutlined, SearchOutlined } from '@ant-design/icons';
+import PageHeader from '../../components/PageHeader';
 import dayjs from 'dayjs';
 import { useKhachHangs, useCreateKhachHang, useUpdateKhachHang } from '../../hooks/useKhachHang';
 
-const { Title } = Typography;
 
 export default function KhachHangListPage() {
   const navigate = useNavigate();
@@ -99,12 +99,10 @@ export default function KhachHangListPage() {
 
   return (
     <>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <Title level={4} style={{ margin: 0 }}>Quản lý khách hàng</Title>
-        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
-          Thêm khách hàng
-        </Button>
-      </div>
+      <PageHeader
+        title="Quản lý khách hàng"
+        extra={<Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>Thêm khách hàng</Button>}
+      />
 
       <Input
         prefix={<SearchOutlined />}

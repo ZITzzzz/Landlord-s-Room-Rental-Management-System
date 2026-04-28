@@ -1,6 +1,14 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { message } from 'antd';
 import * as api from '../api/datCoc.api';
+
+export const useDatCocByPhong = (phong_id) =>
+  useQuery({
+    queryKey: ['datCoc', 'phong', phong_id],
+    queryFn: () => api.getDatCocByPhong(phong_id),
+    enabled: !!phong_id,
+    retry: false,
+  });
 
 export const useCreateDatCoc = () => {
   const qc = useQueryClient();

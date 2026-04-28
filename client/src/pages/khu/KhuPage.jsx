@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Button, Form, Input, Modal, Table, Space, Typography, Skeleton } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import PageHeader from '../../components/PageHeader';
 import { useKhus, useCreateKhu, useUpdateKhu, useDeleteKhu } from '../../hooks/useKhu';
 import ConfirmDeleteModal from '../../components/ConfirmDeleteModal';
 
@@ -102,12 +103,10 @@ export default function KhuPage() {
 
   return (
     <>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <Title level={4} style={{ margin: 0 }}>Quản lý khu</Title>
-        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
-          Thêm khu
-        </Button>
-      </div>
+      <PageHeader
+        title="Quản lý khu"
+        extra={<Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>Thêm khu</Button>}
+      />
 
       <Table
         rowKey="_id"

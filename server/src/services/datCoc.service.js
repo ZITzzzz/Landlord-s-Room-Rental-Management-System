@@ -30,7 +30,9 @@ const huy = async (id, ly_do_huy) => {
 };
 
 const getActiveByPhong = async (phong_id) => {
-  const datCoc = await DatCoc.findOne({ phong_id, trang_thai: 'con_hieu_luc' }).lean();
+  const datCoc = await DatCoc.findOne({ phong_id, trang_thai: 'con_hieu_luc' })
+    .populate('khach_hang_id')
+    .lean();
   if (!datCoc) throw Object.assign(new Error('Không tìm thấy đặt cọc hiệu lực cho phòng này'), { status: 404 });
   return datCoc;
 };

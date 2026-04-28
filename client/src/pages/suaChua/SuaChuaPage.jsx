@@ -4,6 +4,7 @@ import {
   Select, DatePicker, Checkbox, Skeleton, Descriptions,
 } from 'antd';
 import { PlusOutlined, EditOutlined } from '@ant-design/icons';
+import PageHeader from '../../components/PageHeader';
 import dayjs from 'dayjs';
 import { usePhongs } from '../../hooks/usePhong';
 import { useSuaChuas, useCreateSuaChua, useUpdateSuaChua } from '../../hooks/useSuaChua';
@@ -239,12 +240,10 @@ export default function SuaChuaPage() {
 
   return (
     <>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <Title level={4} style={{ margin: 0 }}>Quản lý sửa chữa</Title>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>
-          Tạo yêu cầu
-        </Button>
-      </div>
+      <PageHeader
+        title="Quản lý sửa chữa"
+        extra={<Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>Tạo yêu cầu</Button>}
+      />
 
       {/* Filters */}
       <Space style={{ marginBottom: 16 }} wrap>

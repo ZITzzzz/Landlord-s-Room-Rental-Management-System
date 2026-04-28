@@ -9,6 +9,7 @@ import dayjs from 'dayjs';
 import { usePhongsTrong } from '../../hooks/usePhong';
 import { useKhachHangSearch, useCreateKhachHang } from '../../hooks/useKhachHang';
 import { useCreateHopDong } from '../../hooks/useHopDong';
+import { useDatCocByPhong } from '../../hooks/useDatCoc';
 import StatusBadge from '../../components/StatusBadge';
 
 const { Title, Text } = Typography;
@@ -46,6 +47,16 @@ function StepKhachHangVaThongTin({ selectedKhachHang, onSelectKhachHang, phong, 
     const t = setTimeout(() => setDebouncedQ(rawSearch), 300);
     return () => clearTimeout(t);
   }, [rawSearch]);
+
+  // Khi chọn khách hàng, tự động đặt làm người ở đầu tiên
+  useEffect(() => {
+    if (!selectedKhachHang) return;
+    const current = form.getFieldValue('nguoi_o_ban_dau') ?? [];
+    form.setFieldValue('nguoi_o_ban_dau', [
+      { ho_ten: selectedKhachHang.ho_ten, cmnd: selectedKhachHang.cmnd ?? '' },
+      ...current.slice(1),
+    ]);
+  }, [selectedKhachHang]);
 
   const { data: khachHangs = [], isLoading } = useKhachHangSearch(debouncedQ);
 
@@ -189,30 +200,49 @@ export default function HopDongWizard() {
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedPhong, setSelectedPhong] = useState(null);
   const [selectedKhachHang, setSelectedKhachHang] = useState(null);
+  // Lưu giá trị form vào state khi chuyển bước để tránh mất dữ liệu khi Form.Item unmount
+  const [confirmedValues, setConfirmedValues] = useState(null);
   const [form] = Form.useForm();
   const createMutation = useCreateHopDong();
+
+  // Khi chọn phòng đặt cọc, tự fetch deposit và pre-select khách hàng
+  const datCocPhongId = selectedPhong?.trang_thai === 'dat_coc' ? selectedPhong._id : null;
+  const { data: datCocData } = useDatCocByPhong(datCocPhongId);
+  useEffect(() => {
+    if (datCocData?.khach_hang_id) {
+      setSelectedKhachHang(datCocData.khach_hang_id);
+    }
+  }, [datCocData]);
 
   const goNext = async () => {
     if (currentStep === 0 && selectedPhong) { setCurrentStep(1); return; }
     if (currentStep === 1) {
-      await form.validateFields(['ngay_bat_dau', 'ngay_het_han', 'tien_dat_coc', 'so_nguoi_o', 'nguoi_o_ban_dau']);
       if (!selectedKhachHang) return;
-      setCurrentStep(2);
+      try {
+        const values = await form.validateFields(['ngay_bat_dau', 'ngay_het_han', 'tien_dat_coc', 'so_nguoi_o', 'nguoi_o_ban_dau']);
+        setConfirmedValues(values);
+        setCurrentStep(2);
+      } catch {
+        // form.validateFields tự hiển thị lỗi trên từng field
+      }
     }
   };
 
   const handleConfirm = async () => {
-    const values = form.getFieldsValue();
-    await createMutation.mutateAsync({
-      phong_id: selectedPhong._id,
-      khach_hang_id: selectedKhachHang._id,
-      ngay_bat_dau: values.ngay_bat_dau.toISOString(),
-      ngay_het_han: values.ngay_het_han.toISOString(),
-      tien_dat_coc: values.tien_dat_coc,
-      so_nguoi_o: values.so_nguoi_o,
-      nguoi_o_ban_dau: values.nguoi_o_ban_dau.filter((no) => no.ho_ten),
-    });
-    navigate('/hop-dong');
+    try {
+      await createMutation.mutateAsync({
+        phong_id: selectedPhong._id,
+        khach_hang_id: selectedKhachHang._id,
+        ngay_bat_dau: confirmedValues.ngay_bat_dau.toISOString(),
+        ngay_het_han: confirmedValues.ngay_het_han.toISOString(),
+        tien_dat_coc: confirmedValues.tien_dat_coc,
+        so_nguoi_o: confirmedValues.so_nguoi_o,
+        nguoi_o_ban_dau: (confirmedValues.nguoi_o_ban_dau ?? []).filter((no) => no.ho_ten),
+      });
+      navigate('/hop-dong');
+    } catch {
+      // axiosInstance hiển thị toast lỗi từ API
+    }
   };
 
   const canNext = (currentStep === 0 && !!selectedPhong) || (currentStep === 1 && !!selectedKhachHang);
@@ -238,7 +268,7 @@ export default function HopDongWizard() {
           />
         )}
         {currentStep === 2 && (
-          <StepXacNhan phong={selectedPhong} khachHang={selectedKhachHang} values={form.getFieldsValue()} />
+          <StepXacNhan phong={selectedPhong} khachHang={selectedKhachHang} values={confirmedValues} />
         )}
       </Form>
 
