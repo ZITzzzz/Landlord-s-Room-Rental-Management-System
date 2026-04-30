@@ -13,7 +13,9 @@ import {
   AppstoreOutlined,
   SafetyOutlined,
   BuildOutlined,
+  LogoutOutlined,
 } from '@ant-design/icons';
+import { Button } from 'antd';
 
 const { Sider, Header, Content } = Layout;
 
@@ -37,6 +39,11 @@ const menuItems = [
   { key: '/chi-phi-van-hanh', icon: <BankOutlined />, label: 'Chi phí vận hành' },
   { key: '/bao-cao', icon: <BarChartOutlined />, label: 'Báo cáo' },
 ];
+
+const handleLogout = (navigate) => {
+  localStorage.removeItem('token');
+  navigate('/login', { replace: true });
+};
 
 export default function MainLayout() {
   const [collapsed, setCollapsed] = useState(false);
@@ -100,10 +107,18 @@ export default function MainLayout() {
           zIndex: 1,
           display: 'flex',
           alignItems: 'center',
+          justifyContent: 'space-between',
         }}>
           <span style={{ fontSize: 16, fontWeight: 600, color: '#262626' }}>
             Hệ thống quản lý cho thuê phòng trọ
           </span>
+          <Button
+            icon={<LogoutOutlined />}
+            type="text"
+            onClick={() => handleLogout(navigate)}
+          >
+            Đăng xuất
+          </Button>
         </Header>
 
         <Content style={{

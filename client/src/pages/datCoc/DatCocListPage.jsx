@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Button, Table, Space, Select, Skeleton, Tag, Empty,
+  Button, Table, Space, Select, Skeleton, Empty,
 } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { PlusOutlined, FileTextOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import PageHeader from '../../components/PageHeader';
 import StatusBadge from '../../components/StatusBadge';
@@ -79,9 +79,19 @@ export default function DatCocListPage() {
       align: 'center',
       render: (_, record) =>
         record.trang_thai === 'con_hieu_luc' ? (
-          <Button size="small" danger onClick={() => setHuyTarget(record)}>
-            Hủy đặt cọc
-          </Button>
+          <Space>
+            <Button
+              size="small"
+              type="primary"
+              icon={<FileTextOutlined />}
+              onClick={() => navigate('/hop-dong/tao', { state: { phong_id: record.phong_id?._id } })}
+            >
+              Ký hợp đồng
+            </Button>
+            <Button size="small" danger onClick={() => setHuyTarget(record)}>
+              Hủy đặt cọc
+            </Button>
+          </Space>
         ) : null,
     },
   ];

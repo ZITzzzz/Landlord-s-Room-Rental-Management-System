@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Steps, Button, Form, Input, InputNumber, DatePicker, Table, Space,
-  Typography, Card, Descriptions, Divider, Row, Col, Skeleton,
+  Typography, Card, Descriptions, Divider, Row, Col, Skeleton, Tag,
 } from 'antd';
 import { PlusOutlined, DeleteOutlined, SearchOutlined, UserAddOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
@@ -16,8 +16,15 @@ const { Title, Text } = Typography;
 const formatVND = (v) => (v != null ? v.toLocaleString('vi-VN') + ' đ' : '—');
 
 // ─── Step 1: Pick room ────────────────────────────────────────────────────────
-function StepChonPhong({ selected, onSelect }) {
+function StepChonPhong({ selected, onSelect, preselectedId }) {
   const { data: phongs = [], isLoading } = usePhongsTrong();
+
+  useEffect(() => {
+    if (preselectedId && phongs.length > 0 && !selected) {
+      const found = phongs.find((p) => p._id === preselectedId);
+      if (found) onSelect(found);
+    }
+  }, [phongs, preselectedId]);
 
   const cols = [
     { title: 'Phòng', dataIndex: 'ten', key: 'ten' },
@@ -37,18 +44,28 @@ function StepChonPhong({ selected, onSelect }) {
 
 // ─── Step 2: Customer + occupants + dates ─────────────────────────────────────
 function StepKhachHangVaThongTin({ selectedKhachHang, onSelectKhachHang, phong, form }) {
-  const [rawSearch, setRawSearch] = useState('');
-  const [debouncedQ, setDebouncedQ] = useState('');
+  const [rawSearch, setRawSearch] = useState(selectedKhachHang?.ho_ten ?? '');
+  const [debouncedQ, setDebouncedQ] = useState(selectedKhachHang?.ho_ten ?? '');
   const [showAddForm, setShowAddForm] = useState(false);
   const [newKhForm] = Form.useForm();
   const createKhMutation = useCreateKhachHang();
+
+  // Tìm kiếm riêng cho ô chọn người ở thêm
+  const [occupantSearch, setOccupantSearch] = useState('');
+  const [occupantDebouncedQ, setOccupantDebouncedQ] = useState('');
+  const [showOccupantPicker, setShowOccupantPicker] = useState(false);
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQ(rawSearch), 300);
     return () => clearTimeout(t);
   }, [rawSearch]);
 
-  // Khi chọn khách hàng, tự động đặt làm người ở đầu tiên
+  useEffect(() => {
+    const t = setTimeout(() => setOccupantDebouncedQ(occupantSearch), 300);
+    return () => clearTimeout(t);
+  }, [occupantSearch]);
+
+  // Khi chọn khách hàng thuê chính, tự động điền người ở đầu tiên
   useEffect(() => {
     if (!selectedKhachHang) return;
     const current = form.getFieldValue('nguoi_o_ban_dau') ?? [];
@@ -59,6 +76,7 @@ function StepKhachHangVaThongTin({ selectedKhachHang, onSelectKhachHang, phong, 
   }, [selectedKhachHang]);
 
   const { data: khachHangs = [], isLoading } = useKhachHangSearch(debouncedQ);
+  const { data: occupantResults = [] } = useKhachHangSearch(occupantDebouncedQ);
 
   const handleAddKhachHang = async () => {
     const values = await newKhForm.validateFields();
@@ -144,24 +162,75 @@ function StepKhachHangVaThongTin({ selectedKhachHang, onSelectKhachHang, phong, 
         <Form.List name="nguoi_o_ban_dau" initialValue={[{ ho_ten: '', cmnd: '' }]}>
           {(fields, { add, remove }) => (
             <>
-              {fields.map((field) => (
-                <Space key={field.key} align="start" style={{ marginBottom: 4 }}>
-                  <Form.Item {...field} name={[field.name, 'ho_ten']}
-                    rules={[{ required: true, message: 'Nhập tên' }]} style={{ marginBottom: 0 }}
+              {fields.map((field, index) => (
+                <Space key={field.key} align="start" style={{ marginBottom: 6 }}>
+                  <Form.Item
+                    {...field} name={[field.name, 'ho_ten']}
+                    rules={[{ required: true, message: 'Nhập tên' }]}
+                    style={{ marginBottom: 0 }}
                   >
-                    <Input placeholder="Họ tên" style={{ width: 160 }} />
+                    <Input placeholder="Họ tên" style={{ width: 150 }} readOnly={index === 0} />
                   </Form.Item>
                   <Form.Item {...field} name={[field.name, 'cmnd']} style={{ marginBottom: 0 }}>
-                    <Input placeholder="CMND (tùy chọn)" style={{ width: 160 }} />
+                    <Input placeholder="CMND" style={{ width: 140 }} readOnly={index === 0} />
                   </Form.Item>
-                  {fields.length > 1 && (
-                    <Button danger size="small" icon={<DeleteOutlined />} onClick={() => remove(field.name)} />
-                  )}
+                  {index === 0
+                    ? <Tag color="blue" style={{ lineHeight: '30px' }}>Thuê chính</Tag>
+                    : <Button danger size="small" icon={<DeleteOutlined />} onClick={() => remove(field.name)} />
+                  }
                 </Space>
               ))}
-              <Button type="dashed" size="small" icon={<PlusOutlined />} onClick={() => add({ ho_ten: '', cmnd: '' })}>
-                Thêm người ở
-              </Button>
+
+              <Space style={{ marginTop: 2 }}>
+                <Button
+                  type="dashed" size="small" icon={<PlusOutlined />}
+                  onClick={() => add({ ho_ten: '', cmnd: '' })}
+                >
+                  Thêm người ở
+                </Button>
+                <Button
+                  type="dashed" size="small" icon={<SearchOutlined />}
+                  onClick={() => setShowOccupantPicker(true)}
+                >
+                  Chọn từ danh sách
+                </Button>
+              </Space>
+
+              {showOccupantPicker && (
+                <div style={{ border: '1px dashed #d9d9d9', borderRadius: 6, padding: 10, marginTop: 8 }}>
+                  <Input
+                    prefix={<SearchOutlined />}
+                    placeholder="Tìm khách hàng để thêm..."
+                    allowClear
+                    value={occupantSearch}
+                    onChange={(e) => setOccupantSearch(e.target.value)}
+                    style={{ marginBottom: 8 }}
+                    autoFocus
+                  />
+                  <Table
+                    size="small"
+                    rowKey="_id"
+                    dataSource={occupantResults}
+                    columns={khCols}
+                    pagination={{ pageSize: 4, size: 'small' }}
+                    onRow={(r) => ({
+                      onClick: () => {
+                        add({ ho_ten: r.ho_ten, cmnd: r.cmnd ?? '' });
+                        setShowOccupantPicker(false);
+                        setOccupantSearch('');
+                      },
+                      style: { cursor: 'pointer' },
+                    })}
+                  />
+                  <Button
+                    size="small"
+                    style={{ marginTop: 6 }}
+                    onClick={() => { setShowOccupantPicker(false); setOccupantSearch(''); }}
+                  >
+                    Hủy
+                  </Button>
+                </div>
+              )}
             </>
           )}
         </Form.List>
@@ -197,6 +266,8 @@ function StepXacNhan({ phong, khachHang, values }) {
 // ─── Main Wizard ──────────────────────────────────────────────────────────────
 export default function HopDongWizard() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const preselectedPhongId = location.state?.phong_id ?? null;
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedPhong, setSelectedPhong] = useState(null);
   const [selectedKhachHang, setSelectedKhachHang] = useState(null);
@@ -204,6 +275,13 @@ export default function HopDongWizard() {
   const [confirmedValues, setConfirmedValues] = useState(null);
   const [form] = Form.useForm();
   const createMutation = useCreateHopDong();
+
+  // Nếu đến từ trang đặt cọc (có preselectedPhongId), tự chuyển sang bước 1
+  useEffect(() => {
+    if (preselectedPhongId && selectedPhong?._id === preselectedPhongId && currentStep === 0) {
+      setCurrentStep(1);
+    }
+  }, [selectedPhong]);
 
   // Khi chọn phòng đặt cọc, tự fetch deposit và pre-select khách hàng
   const datCocPhongId = selectedPhong?.trang_thai === 'dat_coc' ? selectedPhong._id : null;
@@ -258,7 +336,7 @@ export default function HopDongWizard() {
       <Steps current={currentStep} items={stepItems} style={{ marginBottom: 32 }} />
 
       <Form form={form} layout="vertical">
-        {currentStep === 0 && <StepChonPhong selected={selectedPhong} onSelect={setSelectedPhong} />}
+        {currentStep === 0 && <StepChonPhong selected={selectedPhong} onSelect={setSelectedPhong} preselectedId={preselectedPhongId} />}
         {currentStep === 1 && (
           <StepKhachHangVaThongTin
             selectedKhachHang={selectedKhachHang}

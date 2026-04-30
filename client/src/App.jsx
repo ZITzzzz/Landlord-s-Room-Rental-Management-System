@@ -1,5 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import MainLayout from './components/layout/MainLayout';
+import LoginPage from './pages/login/LoginPage';
+import PrivateRoute from './components/PrivateRoute';
 
 // Module 1
 import KhuPage from './pages/khu/KhuPage';
@@ -42,7 +44,8 @@ import BaoCaoPage from './pages/baoCao/BaoCaoPage';
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<MainLayout />}>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/" element={<PrivateRoute><MainLayout /></PrivateRoute>}>
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<DashboardPage />} />
 

@@ -6,6 +6,7 @@ const connectDB = require('./config/db');
 const logger = require('./config/logger');
 const { morganMiddleware } = require('./config/logger');
 const errorHandler = require('./middlewares/errorHandler');
+const authMiddleware = require('./middlewares/auth.middleware');
 
 const app = express();
 
@@ -14,9 +15,20 @@ connectDB();
 
 // Middleware pipeline
 app.use(morganMiddleware);
-app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173' }));
+app.use(cors({
+  origin: process.env.CLIENT_URL === '*'
+    ? true
+    : (process.env.CLIENT_URL || 'http://localhost:5173'),
+}));
 app.use(helmet());
 app.use(express.json());
+
+// Public routes (no auth required)
+app.get('/api/health', (req, res) => res.json({ success: true, data: 'OK' }));
+app.use('/api/auth', require('./routes/auth.routes'));
+
+// Protected routes
+app.use('/api', authMiddleware);
 
 // Routes (will be added per module)
 app.use('/api/khu', require('./routes/khu.routes'));
@@ -39,9 +51,6 @@ app.use('/api/bao-cao', require('./routes/baoCao.routes'));
 app.use('/api/in', require('./routes/in.routes'));
 app.use('/api/xuat', require('./routes/xuat.routes'));
 app.use('/api/backup', require('./routes/backup.routes'));
-
-// Health check
-app.get('/api/health', (req, res) => res.json({ success: true, data: 'OK' }));
 
 // Global error handler
 app.use(errorHandler);
