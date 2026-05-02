@@ -59,7 +59,16 @@ export default function MainLayout() {
         collapsed={collapsed}
         onCollapse={setCollapsed}
         width={220}
-        style={{ background: '#001529' }}
+        style={{
+          background: '#001529',
+          position: 'fixed',
+          left: 0,
+          top: 0,
+          bottom: 0,
+          height: '100vh',
+          overflow: 'auto',
+          zIndex: 100,
+        }}
       >
         {/* Logo / Brand */}
         <div style={{
@@ -98,7 +107,7 @@ export default function MainLayout() {
         />
       </Sider>
 
-      <Layout>
+      <Layout style={{ marginLeft: collapsed ? 80 : 220, transition: 'margin-left 0.2s' }}>
         <Header style={{
           background: '#fff',
           padding: '0 24px',
